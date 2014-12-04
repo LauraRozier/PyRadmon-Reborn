@@ -37,7 +37,7 @@ import struct
 #  version is a.b.c, change in a or b means new functionality/bugfix,        #
 #  change in c = bugfix                                                      #
 #  do not uncomment line below, it's currently used in HTTP headers          #
-VERSION="1.1.9"
+VERSION="1.1.10"
 #  To see your online los, report a bug or request a new feature, please     #
 #  visit http://www.radmon.org and/or https://sourceforge.net/p/pyradmon     #
 ##############################################################################
@@ -771,7 +771,6 @@ class audioCommunication(threading.Thread):
         self.is_running=1
         self.pa = pyaudio.PyAudio()
         self.device_index = cfg.deviceIndex
-        self.stream = self.pa.open(format = FORMAT, channels = CHANNELS, rate = RATE, input = True, input_device_index = self.device_index, frames_per_buffer = INPUT_FRAMES_PER_BLOCK)
         self.tap_threshold = INITIAL_TAP_THRESHOLD
         self.noisycount = 0
         
@@ -789,6 +788,7 @@ class audioCommunication(threading.Thread):
                 print "Geiger sample => geiger 1:\tCPM =",result[0],"\t",str(result[1]),"\r\n"
 
             print "Gathering data from Geiger stopped => geiger 1\r\n"
+            self.pa.terminate()
         except Exception as e:
             print "Problem with audio port => geiger 1:\r\n\t", str(e),"\r\nExiting\r\n"
             self.stop()
@@ -798,6 +798,7 @@ class audioCommunication(threading.Thread):
         print "Initializing audio communication => geiger 1\r\n"
 
     def getData(self):
+        self.stream = self.pa.open(format = FORMAT, channels = CHANNELS, rate = RATE, input = True, input_device_index = self.device_index, frames_per_buffer = INPUT_FRAMES_PER_BLOCK)
         for i in range(600):
             try:
                 block = self.stream.read(INPUT_FRAMES_PER_BLOCK)
@@ -806,7 +807,6 @@ class audioCommunication(threading.Thread):
                 print "Problem with audio port => geiger 1:\r\n\t", str(ex),"\r\nExiting\r\n"
                 self.stream.stop_stream()
                 self.stream.close()
-                self.pa.terminate()
                 self.stop()
                 sys.exit(1)
 
@@ -815,9 +815,11 @@ class audioCommunication(threading.Thread):
                 # noisy block
                 self.noisycount += 1
 
+        self.stream.stop_stream()
+        self.stream.close()
+
         if self.noisycount >= 0:
             cpm = self.noisycount * ( 60 / 30 )
-            time.sleep(0.05)
             self.noisycount = 0
             
         utcTime=datetime.datetime.utcnow()
@@ -825,9 +827,6 @@ class audioCommunication(threading.Thread):
         return data
 
     def stop(self):
-        self.stream.stop_stream()
-        self.stream.close()
-        self.pa.terminate()
         self.stopwork=1
         self.queueLock=0
         self.is_running=0
@@ -901,13 +900,12 @@ class audioCommunication2(threading.Thread):
         self.is_running=1
         self.pa = pyaudio.PyAudio()
         self.device_index = cfg.deviceIndex
-        self.stream = self.pa.open(format = FORMAT, channels = CHANNELS, rate = RATE, input = True, input_device_index = self.device_index, frames_per_buffer = INPUT_FRAMES_PER_BLOCK)
         self.tap_threshold = INITIAL_TAP_THRESHOLD
         self.noisycount = 0
         
     def run(self):
         try:
-            print "Gathering data started => geiger 1\r\n"
+            print "Gathering data started => geiger 2\r\n"
             while(self.stopwork==0):
                 result=self.getData()
                 while (self.queueLock==1):
@@ -916,27 +914,28 @@ class audioCommunication2(threading.Thread):
                 self.queueLock=1
                 self.queue.append(result)
                 self.queueLock=0
-                print "Geiger sample => geiger 1:\tCPM =",result[0],"\t",str(result[1]),"\r\n"
+                print "Geiger sample => geiger 2:\tCPM =",result[0],"\t",str(result[1]),"\r\n"
 
-            print "Gathering data from Geiger stopped => geiger 1\r\n"
+            print "Gathering data from Geiger stopped => geiger 2\r\n"
+            self.pa.terminate()
         except Exception as e:
-            print "Problem with audio port => geiger 1:\r\n\t", str(e),"\r\nExiting\r\n"
+            print "Problem with audio port => geiger 2:\r\n\t", str(e),"\r\nExiting\r\n"
             self.stop()
             sys.exit(1)
 
     def initCommunication(self):
-        print "Initializing audio communication => geiger 1\r\n"
+        print "Initializing audio communication => geiger 2\r\n"
 
     def getData(self):
+        self.stream = self.pa.open(format = FORMAT, channels = CHANNELS, rate = RATE, input = True, input_device_index = self.device_index, frames_per_buffer = INPUT_FRAMES_PER_BLOCK)
         for i in range(600):
             try:
                 block = self.stream.read(INPUT_FRAMES_PER_BLOCK)
 
             except Exception as ex:
-                print "Problem with audio port => geiger 1:\r\n\t", str(ex),"\r\nExiting\r\n"
+                print "Problem with audio port => geiger 2:\r\n\t", str(ex),"\r\nExiting\r\n"
                 self.stream.stop_stream()
                 self.stream.close()
-                self.pa.terminate()
                 self.stop()
                 sys.exit(1)
 
@@ -945,9 +944,11 @@ class audioCommunication2(threading.Thread):
                 # noisy block
                 self.noisycount += 1
 
+        self.stream.stop_stream()
+        self.stream.close()
+
         if self.noisycount >= 0:
             cpm = self.noisycount * ( 60 / 30 )
-            time.sleep(0.05)
             self.noisycount = 0
             
         utcTime=datetime.datetime.utcnow()
@@ -955,9 +956,6 @@ class audioCommunication2(threading.Thread):
         return data
 
     def stop(self):
-        self.stream.stop_stream()
-        self.stream.close()
-        self.pa.terminate()
         self.stopwork=1
         self.queueLock=0
         self.is_running=0
@@ -968,7 +966,7 @@ class audioCommunication2(threading.Thread):
 
             # check if it's safe to process queue
             while (self.queueLock==1):
-                print "getResult: quene locked! => geiger 1\r\n"
+                print "getResult: quene locked! => geiger 2\r\n"
                 time.sleep(0.5)
 
             # put lock so measuring process will not interfere with queue,
