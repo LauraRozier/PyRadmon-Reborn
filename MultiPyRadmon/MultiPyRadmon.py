@@ -37,7 +37,7 @@ import struct
 #  version is a.b.c, change in a or b means new functionality/bugfix,        #
 #  change in c = bugfix                                                      #
 #  do not uncomment line below, it's currently used in HTTP headers          #
-VERSION="1.1.8"
+VERSION="1.1.9"
 #  To see your online los, report a bug or request a new feature, please     #
 #  visit http://www.radmon.org and/or https://sourceforge.net/p/pyradmon     #
 ##############################################################################
@@ -797,23 +797,6 @@ class audioCommunication(threading.Thread):
     def initCommunication(self):
         print "Initializing audio communication => geiger 1\r\n"
 
-    def find_input_device(self):
-        device_index = None            
-        for i in range( self.pa.get_device_count() ):     
-            devinfo = self.pa.get_device_info_by_index(i)   
-            print( "Device %d: %s"%(i,devinfo["name"]) )
-
-            for keyword in ["mic","input"]:
-                if keyword in devinfo["name"].lower():
-                    print( "Found an input: device %d - %s"%(i,devinfo["name"]) )
-                    device_index = i
-                    return device_index
-
-        if device_index == None:
-            print( "No preferred input found; using default input device." )
-
-        return device_index
-
     def getData(self):
         for i in range(600):
             try:
@@ -833,7 +816,7 @@ class audioCommunication(threading.Thread):
                 self.noisycount += 1
 
         if self.noisycount >= 0:
-            cpm = cpm = self.noisycount * ( 60 / 30 )
+            cpm = self.noisycount * ( 60 / 30 )
             time.sleep(0.05)
             self.noisycount = 0
             
@@ -963,7 +946,7 @@ class audioCommunication2(threading.Thread):
                 self.noisycount += 1
 
         if self.noisycount >= 0:
-            cpm = cpm = self.noisycount * ( 60 / 30 )
+            cpm = self.noisycount * ( 60 / 30 )
             time.sleep(0.05)
             self.noisycount = 0
             

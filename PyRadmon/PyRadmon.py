@@ -37,7 +37,7 @@ import struct
 #  version is a.b.c, change in a or b means new functionality/bugfix,        #
 #  change in c = bugfix                                                      #
 #  do not uncomment line below, it's currently used in HTTP headers          #
-VERSION="1.1.8"
+VERSION="1.1.9"
 #  To see your online los, report a bug or request a new feature, please     #
 #  visit http://www.radmon.org and/or https://sourceforge.net/p/pyradmon     #
 ##############################################################################
