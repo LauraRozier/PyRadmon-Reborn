@@ -37,7 +37,7 @@ import struct
 #  version is a.b.c, change in a or b means new functionality/bugfix,        #
 #  change in c = bugfix                                                      #
 #  do not uncomment line below, it's currently used in HTTP headers          #
-VERSION="0.5.6"
+VERSION="1.1.8"
 #  To see your online los, report a bug or request a new feature, please     #
 #  visit http://www.radmon.org and/or https://sourceforge.net/p/pyradmon     #
 ##############################################################################
@@ -74,39 +74,10 @@ class config():
         self.portSpeed=2400
         self.timeout=40 # not used for now
         self.protocol=self.UNKNOWN
+        self.deviceIndex=0
 
     def readConfig(self):
         print "Reading configuration:\r\n\t"
-
-        # check if file exists, if not, create one and exit
-        if (os.path.isfile(self.CONFIGFILE)==0):
-            print "\tNo configuration file, creating default one.\r\n\t"
-
-            try:
-                f = open(self.CONFIGFILE, 'w')
-                f.write("# Parameter names are not case-sensitive\r\n")
-                f.write("# Parameter values are case-sensitive\r\n")
-                f.write("user=test_user\r\n")
-                f.write("password=test_password\r\n")
-                f.write("# Port is usually /dev/ttyUSBx in Linux and COMx in Windows\r\n")
-                f.write("serialport=/dev/ttyUSB0\r\n")
-                f.write("speed=2400\r\n")
-                f.write("# Protocols: demo, mygeiger, gmc, netio, audio\r\n")
-                f.write("protocol=demo\r\n")
-                f.write("user2=test_user\r\n")
-                f.write("password2=test_password\r\n")
-                f.write("# Port is usually /dev/ttyUSBx in Linux and COMx in Windows\r\n")
-                f.write("serialport2=/dev/ttyUSB1\r\n")
-                f.write("speed2=2400\r\n")
-                f.write("# Protocols: demo, mygeiger, gmc, netio, audio\r\n")
-                f.write("protocol2=demo\r\n")
-                f.close()
-                exit(1)
-                print "\tPlease open config.txt file using text editor and update configuration.\r\n"
-            except Exception as e:
-                print "\tFailed to create configuration file\r\n\t",str(e)
-            exit(1)
-
         # if file is present then try to read configuration from it
         try:
             f = open(self.CONFIGFILE)
@@ -135,6 +106,10 @@ class config():
                     elif parameter=="speed":
                         self.portSpeed=int(value)
                         print "\tSerial port speed configured\r\n\t"
+                            
+                    elif parameter=="device":
+                        self.deviceIndex=int(value)
+                        print "\tDevice number configured\r\n\t"
 
                     elif parameter=="protocol":
                         value=value.lower()
@@ -186,10 +161,10 @@ class config2():
         self.portSpeed=2400
         self.timeout=40 # not used for now
         self.protocol=self.UNKNOWN
+        self.deviceIndex=0
 
     def readConfig(self):
         print "Reading configuration:\r\n\t"
-
         # if file is present then try to read configuration from it
         try:
             f = open(self.CONFIGFILE)
@@ -218,6 +193,10 @@ class config2():
                     elif parameter=="speed2":
                         self.portSpeed=int(value)
                         print "\tSerial port speed configured\r\n\t"
+                            
+                    elif parameter=="device2":
+                        self.deviceIndex=int(value)
+                        print "\tDevice number configured\r\n\t"
 
                     elif parameter=="protocol2":
                         value=value.lower()
@@ -791,7 +770,7 @@ class audioCommunication(threading.Thread):
         self.queueLock=0
         self.is_running=1
         self.pa = pyaudio.PyAudio()
-        self.device_index = self.find_input_device()
+        self.device_index = cfg.deviceIndex
         self.stream = self.pa.open(format = FORMAT, channels = CHANNELS, rate = RATE, input = True, input_device_index = self.device_index, frames_per_buffer = INPUT_FRAMES_PER_BLOCK)
         self.tap_threshold = INITIAL_TAP_THRESHOLD
         self.noisycount = 0
@@ -836,7 +815,7 @@ class audioCommunication(threading.Thread):
         return device_index
 
     def getData(self):
-        for i in range(200):
+        for i in range(600):
             try:
                 block = self.stream.read(INPUT_FRAMES_PER_BLOCK)
 
@@ -854,7 +833,7 @@ class audioCommunication(threading.Thread):
                 self.noisycount += 1
 
         if self.noisycount >= 0:
-            cpm = self.noisycount
+            cpm = cpm = self.noisycount * ( 60 / 30 )
             time.sleep(0.05)
             self.noisycount = 0
             
@@ -938,7 +917,7 @@ class audioCommunication2(threading.Thread):
         self.queueLock=0
         self.is_running=1
         self.pa = pyaudio.PyAudio()
-        self.device_index = self.find_input_device()
+        self.device_index = cfg.deviceIndex
         self.stream = self.pa.open(format = FORMAT, channels = CHANNELS, rate = RATE, input = True, input_device_index = self.device_index, frames_per_buffer = INPUT_FRAMES_PER_BLOCK)
         self.tap_threshold = INITIAL_TAP_THRESHOLD
         self.noisycount = 0
@@ -965,25 +944,8 @@ class audioCommunication2(threading.Thread):
     def initCommunication(self):
         print "Initializing audio communication => geiger 1\r\n"
 
-    def find_input_device(self):
-        device_index = None            
-        for i in range( self.pa.get_device_count() ):     
-            devinfo = self.pa.get_device_info_by_index(i)   
-            print( "Device %d: %s"%(i,devinfo["name"]) )
-
-            for keyword in ["mic","input"]:
-                if keyword in devinfo["name"].lower():
-                    print( "Found an input: device %d - %s"%(i,devinfo["name"]) )
-                    device_index = i
-                    return device_index
-
-        if device_index == None:
-            print( "No preferred input found; using default input device." )
-
-        return device_index
-
     def getData(self):
-        for i in range(200):
+        for i in range(600):
             try:
                 block = self.stream.read(INPUT_FRAMES_PER_BLOCK)
 
@@ -1001,7 +963,7 @@ class audioCommunication2(threading.Thread):
                 self.noisycount += 1
 
         if self.noisycount >= 0:
-            cpm = self.noisycount
+            cpm = cpm = self.noisycount * ( 60 / 30 )
             time.sleep(0.05)
             self.noisycount = 0
             
@@ -1145,112 +1107,150 @@ class webCommunication2():
 ################################################################################
 # Main code
 ################################################################################
+# check if file exists, if not, create one and exit
+if (os.path.isfile("config.txt")==0):
+    print "\tNo configuration file, creating default one.\r\n\t"
 
-# create and read configuration data
-cfg=config()
-cfg.readConfig()
+    try:
+        f = open("config.txt", 'w')
+        f.write("# Parameter names are not case-sensitive\r\n")
+        f.write("# Parameter values are case-sensitive\r\n")
+        f.write("user=test_user\r\n")
+        f.write("password=test_password\r\n")
+        f.write("user2=test_user\r\n")
+        f.write("password2=test_password\r\n")
+        f.write("# Port is usually /dev/ttyUSBx in Linux and COMx in Windows\r\n")
+        f.write("serialport=/dev/ttyUSB0\r\n")
+        f.write("speed=2400\r\n")
+        f.write("serialport2=/dev/ttyUSB1\r\n")
+        f.write("speed2=2400\r\n")
+        f.write("# Protocols: demo, mygeiger, gmc, netio, audio\r\n")
+        f.write("protocol=demo\r\n")
+        f.write("protocol2=demo\r\n")
+        f.write("# In case of audio, input the device number here, default is 0.\r\n")
+        p = pyaudio.PyAudio()
+        info = p.get_host_api_info_by_index(0)
+        numdevices = info.get('deviceCount')
+        #for each audio device, determine if is an input or an output and add it to the appropriate list and dictionary
+        for i in range (0,numdevices):
+            if p.get_device_info_by_host_api_device_index(0,i).get('maxInputChannels')>0:
+                f.write("# %d - %s \r\n"%(i,p.get_device_info_by_host_api_device_index(0,i).get('name')))
+        p.terminate()
+        f.write("device=0\r\n")
+        f.write("device2=0\r\n")
+        f.close()
+        print "\tPlease open config.txt file using text editor and update configuration.\r\n"
+        exit(1)
+    except Exception as e:
+        print "\tFailed to create configuration file\r\n\t",str(e)
+    exit(1)
 
-# create geiger communication object
-if cfg.protocol==config.MYGEIGER:
-    print "Using myGeiger protocol for 1 => geiger 1\r\n"
-    geigerCommunication=myGeiger(cfg)
-elif cfg.protocol==config.DEMO:
-    print "Using Demo mode for 1 => geiger 1\r\n"
-    geigerCommunication=Demo(cfg)
-elif cfg.protocol==config.GMC:
-    print "Using GMC protocol for 1 => geiger 1\r\n"
-    geigerCommunication=gmc(cfg)
-elif cfg.protocol==config.NETIO:
-    print "Using NetIO protocol for 1 => geiger 1\r\n"
-    geigerCommunication=netio(cfg)
-elif cfg.protocol==config.AUDIO:
-    print "Using audio protocol for 1 => geiger 1\r\n"
-    geigerCommunication = audioCommunication(cfg)
 else:
-    print "Unknown protocol configured, can't run => geiger 1\r\n"
-    sys.exit(1)
-    
-# create and read configuration 2 data
-cfg2=config2()
-cfg2.readConfig()
+    # main loop is in while loop
+    try:
+        # create and read configuration data
+        cfg=config()
+        cfg.readConfig()
 
-if cfg2.protocol==config2.MYGEIGER:
-    print "Using myGeiger protocol => geiger 2\r\n"
-    geigerCommunication2=myGeiger2(cfg2)
-elif cfg2.protocol==config2.DEMO:
-    print "Using Demo mode => geiger 2\r\n"
-    geigerCommunication2=Demo2(cfg2)
-elif cfg2.protocol==config2.GMC:
-    print "Using GMC protocol => geiger 2\r\n"
-    geigerCommunication2=gmc2(cfg2)
-elif cfg2.protocol==config2.NETIO:
-    print "Using NetIO protocol => geiger 2\r\n"
-    geigerCommunication2=netio2(cfg2)
-elif cfg2.protocol==config2.AUDIO:
-    print "Using audio protocol for 1 => geiger 1\r\n"
-    geigerCommunication2 = audioCommunication2(cfg2)
-else:
-    print "Unknown protocol configured, can't run => geiger 2\r\n"
-    sys.exit(1)
-
-# create web server communication object
-webService=webCommunication(cfg)
-webService2=webCommunication2(cfg2)
-
-# main loop is in while loop
-try:
-    # start measuring thread
-    geigerCommunication.start()
-    geigerCommunication2.start()
-
-    # Now send data to web site every 30 seconds
-    while(geigerCommunication.is_running==1 and geigerCommunication2.is_running==1):
-        sample=geigerCommunication.getResult()
-        sample2=geigerCommunication2.getResult()
-
-        if sample[0]!=-1:
-            # sample is valid, CPM !=-1
-            print "Average result => geiger 1:\tCPM =",sample[0],"\t",str(sample[1]),"\r\n"
-            try:
-                webService.sendSample(sample)
-            except Exception as e:
-                print "Error communicating server => geiger 1:\r\n\t", str(e),"\r\n"
-
-            print "Waiting 30 seconds => geiger 1\r\n"
-            # actually waiting 30x1 seconds, it's has better response when CTRL+C is used, maybe will be changed in future
-            for i in range(0,30):
-                time.sleep(1)
+        # create geiger communication object
+        if cfg.protocol==config.MYGEIGER:
+            print "Using myGeiger protocol for 1 => geiger 1\r\n"
+            geigerCommunication=myGeiger(cfg)
+        elif cfg.protocol==config.DEMO:
+            print "Using Demo mode for 1 => geiger 1\r\n"
+            geigerCommunication=Demo(cfg)
+        elif cfg.protocol==config.GMC:
+            print "Using GMC protocol for 1 => geiger 1\r\n"
+            geigerCommunication=gmc(cfg)
+        elif cfg.protocol==config.NETIO:
+            print "Using NetIO protocol for 1 => geiger 1\r\n"
+            geigerCommunication=netio(cfg)
+        elif cfg.protocol==config.AUDIO:
+            print "Using audio protocol for 1 => geiger 1\r\n"
+            geigerCommunication = audioCommunication(cfg)
         else:
-            print "No samples in queue, waiting 5 seconds => geiger 1\r\n"
-            for i in range(0,5):
-                time.sleep(1)
+            print "Unknown protocol configured, can't run => geiger 1\r\n"
+            sys.exit(1)
+            
+        # create and read configuration 2 data
+        cfg2=config2()
+        cfg2.readConfig()
 
-        if sample2[0]!=-1:
-            # sample2 is valid, CPM !=-1
-            print "Average result => geiger 2:\tCPM =",sample2[0],"\t",str(sample2[1]),"\r\n"
-            try:
-                webService2.sendSample(sample2)
-            except Exception as e:
-                print "Error communicating server => geiger 2:\r\n\t", str(e),"\r\n"
-
-            print "Waiting 30 seconds => geiger 2\r\n"
-            # actually waiting 30x1 seconds, it's has better response when CTRL+C is used, maybe will be changed in future
-            for i in range(0,30):
-                time.sleep(1)
+        if cfg2.protocol==config2.MYGEIGER:
+            print "Using myGeiger protocol => geiger 2\r\n"
+            geigerCommunication2=myGeiger2(cfg2)
+        elif cfg2.protocol==config2.DEMO:
+            print "Using Demo mode => geiger 2\r\n"
+            geigerCommunication2=Demo2(cfg2)
+        elif cfg2.protocol==config2.GMC:
+            print "Using GMC protocol => geiger 2\r\n"
+            geigerCommunication2=gmc2(cfg2)
+        elif cfg2.protocol==config2.NETIO:
+            print "Using NetIO protocol => geiger 2\r\n"
+            geigerCommunication2=netio2(cfg2)
+        elif cfg2.protocol==config2.AUDIO:
+            print "Using audio protocol for 1 => geiger 1\r\n"
+            geigerCommunication2 = audioCommunication2(cfg2)
         else:
-            print "No samples in queue, waiting 5 seconds => geiger 2\r\n"
-            for i in range(0,5):
-                time.sleep(1)
+            print "Unknown protocol configured, can't run => geiger 2\r\n"
+            sys.exit(1)
 
-except KeyboardInterrupt as e:
-    print "\r\nCTRL+C pressed, exiting program\r\n\t", str(e), "\r\n"
+        # create web server communication object
+        webService=webCommunication(cfg)
+        webService2=webCommunication2(cfg2)
+        
+        # start measuring thread
+        geigerCommunication.start()
+        geigerCommunication2.start()
+
+        # Now send data to web site every 30 seconds
+        while(geigerCommunication.is_running==1 and geigerCommunication2.is_running==1):
+            sample=geigerCommunication.getResult()
+            sample2=geigerCommunication2.getResult()
+
+            if sample[0]!=-1:
+                # sample is valid, CPM !=-1
+                print "Average result => geiger 1:\tCPM =",sample[0],"\t",str(sample[1]),"\r\n"
+                try:
+                    webService.sendSample(sample)
+                except Exception as e:
+                    print "Error communicating server => geiger 1:\r\n\t", str(e),"\r\n"
+
+                print "Waiting 30 seconds => geiger 1\r\n"
+                # actually waiting 30x1 seconds, it's has better response when CTRL+C is used, maybe will be changed in future
+                for i in range(0,30):
+                    time.sleep(1)
+            else:
+                print "No samples in queue, waiting 5 seconds => geiger 1\r\n"
+                for i in range(0,5):
+                    time.sleep(1)
+
+            if sample2[0]!=-1:
+                # sample2 is valid, CPM !=-1
+                print "Average result => geiger 2:\tCPM =",sample2[0],"\t",str(sample2[1]),"\r\n"
+                try:
+                    webService2.sendSample(sample2)
+                except Exception as e:
+                    print "Error communicating server => geiger 2:\r\n\t", str(e),"\r\n"
+
+                print "Waiting 30 seconds => geiger 2\r\n"
+                # actually waiting 30x1 seconds, it's has better response when CTRL+C is used, maybe will be changed in future
+                for i in range(0,30):
+                    time.sleep(1)
+            else:
+                print "No samples in queue, waiting 5 seconds => geiger 2\r\n"
+                for i in range(0,5):
+                    time.sleep(1)
+
+    except KeyboardInterrupt as e:
+        print "\r\nCTRL+C pressed, exiting program\r\n\t", str(e), "\r\n"
+        geigerCommunication.stop()
+        geigerCommunication2.stop()
+
+    except Exception as e:
+        print "\r\nUnhandled error\r\n\t",str(e),"\r\n"
+        geigerCommunication.stop()
+        geigerCommunication2.stop()
+
     geigerCommunication.stop()
     geigerCommunication2.stop()
-
-except Exception as e:
-    print "\r\nUnhandled error\r\n\t",str(e),"\r\n"
-    geigerCommunication.stop()
-    geigerCommunication2.stop()
-
-geigerCommunication.stop()
-geigerCommunication2.stop()
