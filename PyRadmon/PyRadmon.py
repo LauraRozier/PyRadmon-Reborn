@@ -536,8 +536,8 @@ class audioCommunication(threading.Thread):
 # Part 3 - Web server communication
 ################################################################################
 class webCommunication():
-    #HOST="www.radmon.org"
-    HOST="127.0.0.1" # uncomment this for debug purposes on localhost
+    HOST="www.radmon.org"
+    #HOST="127.0.0.1" # uncomment this for debug purposes on localhost
     PORT=80
 
     def __init__(self, mycfg):
