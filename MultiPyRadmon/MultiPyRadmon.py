@@ -1008,10 +1008,10 @@ class webCommunication():
         self.password=mycfg.password
 
     def sendSample(self, sample):
-
         print "Connecting to server => geiger 1\r\n"
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.HOST, self.PORT))
+        s.settimeout(10.0)
 
         BUFFER_SIZE=1024
 
@@ -1027,16 +1027,26 @@ class webCommunication():
         print "Sending average sample => geiger 1: "+str(sampleCPM)+" CPM\r\n"
         #print "\r\n### HTTP Request ###\r\n"+request
 
-        s.send(request)
-        data = s.recv(BUFFER_SIZE)
-        httpResponse=str(data).splitlines()[0]
-        print "Server response => geiger 1: ",httpResponse,"\r\n"
+        try:
+            data = None
+            doneSend = False
+            s.send(request)
+            time.sleep(0.5)
+            data = s.recv(BUFFER_SIZE)
+            time.sleep(0.5)
+            for i in range(10):
+                if doneSend is False:
+                    if data is not None:
+                        httpResponse=str(data).splitlines()[0]
+                        print "Server response => geiger 1: ",httpResponse,"\r\n"
 
-        if "incorrect login" in data.lower():
-            print "You are using incorrect user/password combination => geiger 1!\r\n"
-            geigerCommunication.stop()
-            geigerCommunication2.stop()
-            sys.exit(1)
+                        if "incorrect login" in data.lower():
+                            print "You are using incorrect user/password combination => geiger 1!\r\n"
+                            geigerCommunication.stop()
+                            sys.exit(1)
+                        doneSend = True
+        except Exception as ex:
+            print "Could not communicate with the Server, timeout reached. => geiger 1: ",ex,"\r\n"
             
         #print "\r\n### HTTP Response ###\r\n"+data+"\r\n"
         s.close
@@ -1051,10 +1061,10 @@ class webCommunication2():
         self.password=mycfg.password
 
     def sendSample(self, sample):
-
         print "Connecting to server => geiger 2\r\n"
         s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s2.connect((self.HOST, self.PORT))
+        s2.settimeout(10.0)
 
         BUFFER_SIZE=1024
 
@@ -1070,16 +1080,26 @@ class webCommunication2():
         print "Sending average sample => geiger 2: "+str(sampleCPM)+" CPM\r\n"
         #print "\r\n### HTTP Request ###\r\n"+request
 
-        s2.send(request)
-        data = s2.recv(BUFFER_SIZE)
-        httpResponse=str(data).splitlines()[0]
-        print "Server response => geiger 2: ",httpResponse,"\r\n"
+        try:
+            data = None
+            doneSend = False
+            s2.send(request)
+            time.sleep(0.5)
+            data = s2.recv(BUFFER_SIZE)
+            time.sleep(0.5)
+            for i in range(10):
+                if doneSend is False:
+                    if data is not None:
+                        httpResponse=str(data).splitlines()[0]
+                        print "Server response => geiger 2: ",httpResponse,"\r\n"
 
-        if "incorrect login" in data.lower():
-            print "You are using incorrect user/password combination! => geiger 2\r\n"
-            geigerCommunication.stop()
-            geigerCommunication2.stop()
-            sys.exit(1)
+                        if "incorrect login" in data.lower():
+                            print "You are using incorrect user/password combination => geiger 2!\r\n"
+                            geigerCommunication.stop()
+                            sys.exit(1)
+                        doneSend = True
+        except Exception as ex:
+            print "Could not communicate with the Server, timeout reached. => geiger 2: ",ex,"\r\n"
             
         #print "\r\n### HTTP Response ###\r\n"+data+"\r\n"
         s2.close
