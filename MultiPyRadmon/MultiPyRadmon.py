@@ -37,7 +37,7 @@ import struct
 #  version is a.b.c, change in a or b means new functionality/bugfix,        #
 #  change in c = bugfix                                                      #
 #  do not uncomment line below, it's currently used in HTTP headers          #
-VERSION="1.1.12"
+VERSION="1.1.13"
 #  To see your online los, report a bug or request a new feature, please     #
 #  visit http://www.radmon.org and/or https://sourceforge.net/p/pyradmon     #
 ##############################################################################
@@ -1047,12 +1047,7 @@ class webCommunication():
         self.password=mycfg.password
 
     def sendSample(self, sample):
-        print "Connecting to server => geiger 1\r\n"
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((self.HOST, self.PORT))
-        s.settimeout(10.0)
-
-        BUFFER_SIZE=1024
+        if not self.user or not self.password: return
 
         sampleCPM=sample[0]
         sampleTime=sample[1]
@@ -1060,37 +1055,40 @@ class webCommunication():
         # format date and time as required
         dtime=sampleTime.strftime("%Y-%m-%d%%20%H:%M:%S")
 
+        print "Connecting to server => geiger 1\r\n"
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         url="GET /radmon.php?user="+self.user+"&password="+self.password+"&function=submit&datetime="+dtime+"&value="+str(sampleCPM)+"&unit=CPM HTTP/1.1"
-
         request=url+"\r\nHost: www.radmon.org\r\nUser-Agent: pyRadMon "+VERSION+"\r\n\r\n"
         print "Sending average sample => geiger 1: "+str(sampleCPM)+" CPM\r\n"
         #print "\r\n### HTTP Request ###\r\n"+request
 
         try:
+            s.connect((self.HOST, self.PORT))
+            s.settimeout(10.0)
             data = None
             doneSend = False
             s.send(request)
             time.sleep(0.5)
-            data = s.recv(BUFFER_SIZE)
+            data = s.recv(1024)
             time.sleep(0.5)
             for i in range(10):
                 if doneSend is False:
                     if data is not None:
                         httpResponse=str(data).splitlines()[0]
                         print "Server response => geiger 1: ",httpResponse,"\r\n"
-
                         if "incorrect login" in data.lower():
                             print "You are using incorrect user/password combination => geiger 1!\r\n"
                             geigerCommunication.stop()
+                            geigerCommunication2.stop()
                             sys.exit(1)
                         doneSend = True
         except Exception as ex:
             print "Could not communicate with the Server, timeout reached. => geiger 1: ",ex,"\r\n"
-            
-        #print "\r\n### HTTP Response ###\r\n"+data+"\r\n"
-        s.close
+        finally:
+            #print "\r\n### HTTP Response ###\r\n"+data+"\r\n"
+            s.close()
 
-class webCommunication2():
+class webCommunication():
     HOST="www.radmon.org"
     #HOST="127.0.0.1" # uncomment this for debug purposes on localhost
     PORT=80
@@ -1100,12 +1098,7 @@ class webCommunication2():
         self.password=mycfg.password
 
     def sendSample(self, sample):
-        print "Connecting to server => geiger 2\r\n"
-        s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s2.connect((self.HOST, self.PORT))
-        s2.settimeout(10.0)
-
-        BUFFER_SIZE=1024
+        if not self.user or not self.password: return
 
         sampleCPM=sample[0]
         sampleTime=sample[1]
@@ -1113,36 +1106,38 @@ class webCommunication2():
         # format date and time as required
         dtime=sampleTime.strftime("%Y-%m-%d%%20%H:%M:%S")
 
+        print "Connecting to server => geiger 2\r\n"
+        s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         url="GET /radmon.php?user="+self.user+"&password="+self.password+"&function=submit&datetime="+dtime+"&value="+str(sampleCPM)+"&unit=CPM HTTP/1.1"
-
         request=url+"\r\nHost: www.radmon.org\r\nUser-Agent: pyRadMon "+VERSION+"\r\n\r\n"
         print "Sending average sample => geiger 2: "+str(sampleCPM)+" CPM\r\n"
         #print "\r\n### HTTP Request ###\r\n"+request
 
         try:
+            s2.connect((self.HOST, self.PORT))
+            s2.settimeout(10.0)
             data = None
             doneSend = False
             s2.send(request)
             time.sleep(0.5)
-            data = s2.recv(BUFFER_SIZE)
+            data = s2.recv(1024)
             time.sleep(0.5)
             for i in range(10):
                 if doneSend is False:
                     if data is not None:
                         httpResponse=str(data).splitlines()[0]
                         print "Server response => geiger 2: ",httpResponse,"\r\n"
-
                         if "incorrect login" in data.lower():
                             print "You are using incorrect user/password combination => geiger 2!\r\n"
                             geigerCommunication.stop()
+                            geigerCommunication2.stop()
                             sys.exit(1)
                         doneSend = True
         except Exception as ex:
             print "Could not communicate with the Server, timeout reached. => geiger 2: ",ex,"\r\n"
-            
-        #print "\r\n### HTTP Response ###\r\n"+data+"\r\n"
-        s2.close
-
+        finally:
+            #print "\r\n### HTTP Response ###\r\n"+data+"\r\n"
+            s2.close()
 
 ################################################################################
 # Main code

@@ -36,7 +36,7 @@ import struct
 #  version is a.b.c, change in a or b means new functionality/bugfix,        #
 #  change in c = bugfix                                                      #
 #  do not uncomment line below, it's currently used in HTTP headers          #
-VERSION="1.1.12"
+VERSION="1.1.13"
 #  To see your online los, report a bug or request a new feature, please     #
 #  visit http://www.radmon.org and/or https://sourceforge.net/p/pyradmon     #
 ##############################################################################
@@ -396,7 +396,6 @@ class webCommunication():
     def sendSample(self, sample):
         if not self.user or not self.password: return
 
-        BUFFER_SIZE=1024
         sampleCPM=sample[0]
         sampleTime=sample[1]
 
@@ -417,7 +416,7 @@ class webCommunication():
             doneSend = False
             s.send(request)
             time.sleep(0.5)
-            data = s.recv(BUFFER_SIZE)
+            data = s.recv(1024)
             time.sleep(0.5)
             for i in range(10):
                 if doneSend is False:
