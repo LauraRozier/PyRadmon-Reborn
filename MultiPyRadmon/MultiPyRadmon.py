@@ -1088,7 +1088,7 @@ class webCommunication():
             #print "\r\n### HTTP Response ###\r\n"+data+"\r\n"
             s.close()
 
-class webCommunication():
+class webCommunication2():
     HOST="www.radmon.org"
     #HOST="127.0.0.1" # uncomment this for debug purposes on localhost
     PORT=80
