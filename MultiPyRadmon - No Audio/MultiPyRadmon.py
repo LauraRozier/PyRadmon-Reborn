@@ -36,7 +36,7 @@ import struct
 #  version is a.b.c, change in a or b means new functionality/bugfix,        #
 #  change in c = bugfix                                                      #
 #  do not uncomment line below, it's currently used in HTTP headers          #
-VERSION="1.1.11A"
+VERSION="1.1.12"
 #  To see your online los, report a bug or request a new feature, please     #
 #  visit http://www.radmon.org and/or https://sourceforge.net/p/pyradmon     #
 ##############################################################################
@@ -818,36 +818,39 @@ class webCommunication2():
 ################################################################################
 # Main code
 ################################################################################
-# check if file exists, if not, create one and exit
-if (os.path.isfile("config.txt")==0):
-    print "\tNo configuration file, creating default one.\r\n\t"
-
-    try:
-        f = open("config.txt", 'w')
-        f.write("# Parameter names are not case-sensitive\r\n")
-        f.write("# Parameter values are case-sensitive\r\n")
-        f.write("user=test_user\r\n")
-        f.write("password=test_password\r\n")
-        f.write("user2=test_user\r\n")
-        f.write("password2=test_password\r\n")
-        f.write("# Port is usually /dev/ttyUSBx in Linux and COMx in Windows\r\n")
-        f.write("serialport=/dev/ttyUSB0\r\n")
-        f.write("speed=2400\r\n")
-        f.write("serialport2=/dev/ttyUSB1\r\n")
-        f.write("speed2=2400\r\n")
-        f.write("# Protocols: demo, mygeiger, gmc, netio\r\n")
-        f.write("protocol=demo\r\n")
-        f.write("protocol2=demo\r\n")
-        f.close()
-        print "\tPlease open config.txt file using text editor and update configuration.\r\n"
-        exit(1)
-    except Exception as e:
-        print "\tFailed to create configuration file\r\n\t",str(e)
-    exit(1)
-
-else:
+def main():
     # main loop is in while loop
-    try:
+    # check if file exists, if not, create one and exit
+    if (os.path.isfile("config.txt")==0):
+        print "\tNo configuration file, creating default one.\r\n\t"
+
+        try:
+            f = open("config.txt", 'w')
+            f.write("# Parameter names are not case-sensitive\r\n")
+            f.write("# Parameter values are case-sensitive\r\n")
+            f.write("user=test_user\r\n")
+            f.write("password=test_password\r\n")
+            f.write("user2=test_user\r\n")
+            f.write("password2=test_password\r\n")
+            f.write("# Port is usually /dev/ttyUSBx in Linux and COMx in Windows\r\n")
+            f.write("serialport=/dev/ttyUSB0\r\n")
+            f.write("speed=2400\r\n")
+            f.write("serialport2=/dev/ttyUSB1\r\n")
+            f.write("speed2=2400\r\n")
+            f.write("# Protocols: demo, mygeiger, gmc, netio\r\n")
+            f.write("protocol=demo\r\n")
+            f.write("protocol2=demo\r\n")
+            f.close()
+            print "\tPlease open config.txt file using text editor and update configuration.\r\n"
+            exit(1)
+        except Exception as e:
+            print "\tFailed to create configuration file\r\n\t",str(e)
+        finally:
+            time.sleep(1)
+            f.close()
+        sys.exit(1)
+
+    else:
         # create and read configuration data
         cfg=config()
         cfg.readConfig()
@@ -888,63 +891,79 @@ else:
         else:
             print "Unknown protocol configured, can't run => geiger 2\r\n"
             sys.exit(1)
+        try:
+            
+            # create web server communication object
+            webService=webCommunication(cfg)
+            webService2=webCommunication2(cfg2)
+            
+            # start measuring thread
+            geigerCommunication.start()
+            geigerCommunication2.start()
 
-        # create web server communication object
-        webService=webCommunication(cfg)
-        webService2=webCommunication2(cfg2)
-        
-        # start measuring thread
-        geigerCommunication.start()
-        geigerCommunication2.start()
+            # Now send data to web site every 30 seconds
+            while(geigerCommunication.is_running==1 and geigerCommunication2.is_running==1):
+                sample=geigerCommunication.getResult()
+                sample2=geigerCommunication2.getResult()
 
-        # Now send data to web site every 30 seconds
-        while(geigerCommunication.is_running==1 and geigerCommunication2.is_running==1):
-            sample=geigerCommunication.getResult()
-            sample2=geigerCommunication2.getResult()
+                if sample[0]!=-1:
+                    # sample is valid, CPM !=-1
+                    print "Average result => geiger 1:\tCPM =",sample[0],"\t",str(sample[1]),"\r\n"
+                    try:
+                        webService.sendSample(sample)
+                    except Exception as e:
+                        print "Error communicating server => geiger 1:\r\n\t", str(e),"\r\n"
 
-            if sample[0]!=-1:
-                # sample is valid, CPM !=-1
-                print "Average result => geiger 1:\tCPM =",sample[0],"\t",str(sample[1]),"\r\n"
-                try:
-                    webService.sendSample(sample)
-                except Exception as e:
-                    print "Error communicating server => geiger 1:\r\n\t", str(e),"\r\n"
+                    print "Waiting 30 seconds => geiger 1\r\n"
+                    # actually waiting 30x1 seconds, it's has better response when CTRL+C is used, maybe will be changed in future
+                    for i in range(0,30):
+                        time.sleep(1)
+                else:
+                    print "No samples in queue, waiting 5 seconds => geiger 1\r\n"
+                    for i in range(0,5):
+                        time.sleep(1)
+                    continue
 
-                print "Waiting 30 seconds => geiger 1\r\n"
-                # actually waiting 30x1 seconds, it's has better response when CTRL+C is used, maybe will be changed in future
-                for i in range(0,30):
-                    time.sleep(1)
-            else:
-                print "No samples in queue, waiting 5 seconds => geiger 1\r\n"
-                for i in range(0,5):
-                    time.sleep(1)
+                if sample2[0]!=-1:
+                    # sample2 is valid, CPM !=-1
+                    print "Average result => geiger 2:\tCPM =",sample2[0],"\t",str(sample2[1]),"\r\n"
+                    try:
+                        webService2.sendSample(sample2)
+                    except Exception as e:
+                        print "Error communicating server => geiger 2:\r\n\t", str(e),"\r\n"
 
-            if sample2[0]!=-1:
-                # sample2 is valid, CPM !=-1
-                print "Average result => geiger 2:\tCPM =",sample2[0],"\t",str(sample2[1]),"\r\n"
-                try:
-                    webService2.sendSample(sample2)
-                except Exception as e:
-                    print "Error communicating server => geiger 2:\r\n\t", str(e),"\r\n"
+                    print "Waiting 30 seconds => geiger 2\r\n"
+                    # actually waiting 30x1 seconds, it's has better response when CTRL+C is used, maybe will be changed in future
+                    for i in range(0,30):
+                        time.sleep(1)
+                else:
+                    print "No samples in queue, waiting 5 seconds => geiger 2\r\n"
+                    for i in range(0,5):
+                        time.sleep(1)
+                    continue
 
-                print "Waiting 30 seconds => geiger 2\r\n"
-                # actually waiting 30x1 seconds, it's has better response when CTRL+C is used, maybe will be changed in future
-                for i in range(0,30):
-                    time.sleep(1)
-            else:
-                print "No samples in queue, waiting 5 seconds => geiger 2\r\n"
-                for i in range(0,5):
-                    time.sleep(1)
+        except KeyboardInterrupt as e:
+            print "\r\nCTRL+C pressed, exiting program\r\n\t", str(e), "\r\n"
 
-    except KeyboardInterrupt as e:
-        print "\r\nCTRL+C pressed, exiting program\r\n\t", str(e), "\r\n"
+        except SystemExit:
+            print "\r\nSystem exit\r\n\t",str(e),"\r\n"
+
+        except Exception as e:
+            print "\r\nUnhandled error\r\n\t",str(e),"\r\n"
+
         geigerCommunication.stop()
         geigerCommunication2.stop()
 
-    except Exception as e:
-        print "\r\nUnhandled error\r\n\t",str(e),"\r\n"
-        geigerCommunication.stop()
-        geigerCommunication2.stop()
+        # Threading fix
+        print "Waiting and reap threads"
+        time.sleep(1)
+        for numThread in threading.enumerate():
+            if numThread.isDaemon(): continue
+            if numThread.getName() == 'MainThread': continue
+            print "Stopping alive thread: ", numThread.getName(), "\r\n\t"
+            numThread.stop()
+            time.sleep(1)
+        sys.exit(0)
 
-    geigerCommunication.stop()
-    geigerCommunication2.stop()
+if __name__ == '__main__':
+    main()

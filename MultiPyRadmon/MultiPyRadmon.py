@@ -37,7 +37,7 @@ import struct
 #  version is a.b.c, change in a or b means new functionality/bugfix,        #
 #  change in c = bugfix                                                      #
 #  do not uncomment line below, it's currently used in HTTP headers          #
-VERSION="1.1.10"
+VERSION="1.1.12"
 #  To see your online los, report a bug or request a new feature, please     #
 #  visit http://www.radmon.org and/or https://sourceforge.net/p/pyradmon     #
 ##############################################################################
@@ -241,6 +241,7 @@ class baseGeigerCommunication(threading.Thread):
         self.queue=deque()
         self.queueLock=0
         self.is_running=1
+        self.name="baseGeigerCommunication"
 
     def run(self):
         try:
@@ -488,6 +489,7 @@ class baseGeigerCommunication2(threading.Thread):
         self.queue=deque()
         self.queueLock=0
         self.is_running=1
+        self.name="baseGeigerCommunication2"
 
     def run(self):
         try:
@@ -727,23 +729,13 @@ class netio2(baseGeigerCommunication2):
 ################################################################################
 # Part 2b - audio geiger handeler
 ################################################################################
-INITIAL_TAP_THRESHOLD = 0.010
-FORMAT = pyaudio.paInt16 
-SHORT_NORMALIZE = (1.0/32768.0)
-CHANNELS = 2
-RATE = 44100  
-INPUT_BLOCK_TIME = 0.05
-INPUT_FRAMES_PER_BLOCK = int(RATE*INPUT_BLOCK_TIME)
 # if the noise was longer than this many blocks, it's not a 'tap'
-MAX_TAP_BLOCKS = 0.15/INPUT_BLOCK_TIME
-    
 def get_rms( block ):
-    # RMS amplitude is defined as the square root of the 
+    # RMS amplitude is defined as the square root of the
     # mean over time of the square of the amplitude.
-    # so we need to convert this string of bytes into 
+    # so we need to convert this string of bytes into
     # a string of 16-bit samples...
-
-    # we will get one short out for each 
+    # we will get one short out for each
     # two chars in the string.
     count = len(block)/2
     format = "%dh"%(count)
@@ -752,9 +744,9 @@ def get_rms( block ):
     # iterate over the block.
     sum_squares = 0.0
     for sample in shorts:
-        # sample is a signed short in +/- 32768. 
+        # sample is a signed short in +/- 32768.
         # normalize it to 1.0
-        n = sample * SHORT_NORMALIZE
+        n = sample * (1.0/32768.0)
         sum_squares += n*n
 
     return math.sqrt( sum_squares / count )
@@ -771,9 +763,13 @@ class audioCommunication(threading.Thread):
         self.is_running=1
         self.pa = pyaudio.PyAudio()
         self.device_index = cfg.deviceIndex
-        self.tap_threshold = INITIAL_TAP_THRESHOLD
         self.noisycount = 0
-        
+        self.bSquelchIoerror = int(1) != 0
+        self.name="audioCommunication"
+
+    def initCommunication(self):
+        print "Initializing audio communication => geiger 1\r\n"
+
     def run(self):
         try:
             print "Gathering data started => geiger 1\r\n"
@@ -788,45 +784,65 @@ class audioCommunication(threading.Thread):
                 print "Geiger sample => geiger 1:\tCPM =",result[0],"\t",str(result[1]),"\r\n"
 
             print "Gathering data from Geiger stopped => geiger 1\r\n"
-            self.pa.terminate()
         except Exception as e:
             print "Problem with audio port => geiger 1:\r\n\t", str(e),"\r\nExiting\r\n"
             self.stop()
             sys.exit(1)
 
-    def initCommunication(self):
-        print "Initializing audio communication => geiger 1\r\n"
-
     def getData(self):
-        self.stream = self.pa.open(format = FORMAT, channels = CHANNELS, rate = RATE, input = True, input_device_index = self.device_index, frames_per_buffer = INPUT_FRAMES_PER_BLOCK)
-        for i in range(600):
+        self.stream = self.pa.open(format = pyaudio.paInt16,
+                                   channels = 2,
+                                   rate = 44100,
+                                   input = True,
+                                   input_device_index = self.device_index,
+                                   start = True,
+                                   frames_per_buffer = int(44100*0.05))
+        for i in range(0, int(44100 / 1024 * 30)):
             try:
-                block = self.stream.read(INPUT_FRAMES_PER_BLOCK)
-
+                if not self.stream: break
+                block = self.stream.read(1024)
+            except (pyaudio.paInputOverflowed, IOError,):
+                #? buffer overflows are a real problem in pyaudio
+                #? depending on the choice of fRate and CHUNK.
+                #? signal them to the user, but ignore them -
+                #? play with fRate and CHUNK until they are at a minimum
+                if self.is_running and not self.bSquelchIoerror:
+                    print "paInputOverflow on audio port => %d"
+                continue
             except Exception as ex:
-                print "Problem with audio port => geiger 1:\r\n\t", str(ex),"\r\nExiting\r\n"
-                self.stream.stop_stream()
-                self.stream.close()
+                # pdb.set_trace()
+                print "Problem with audio port => 1\r\n\t", str(ex), "\r\n\tExiting\r\n\t"
+                if self.stream:
+                    self.stream.stop_stream()
+                    self.stream.close()
+                    self.stream = None
                 self.stop()
                 sys.exit(1)
 
             amplitude = get_rms( block )
-            if amplitude > self.tap_threshold:
+            if amplitude > 0.010:
                 # noisy block
                 self.noisycount += 1
 
-        self.stream.stop_stream()
-        self.stream.close()
+        if self.stream:
+            self.stream.stop_stream()
+            self.stream.close()
+            self.stream=None
 
         if self.noisycount >= 0:
             cpm = self.noisycount * ( 60 / 30 )
             self.noisycount = 0
-            
+
         utcTime=datetime.datetime.utcnow()
         data=[cpm, utcTime]
         return data
 
     def stop(self):
+        if self.stream:
+            self.stream.stop_stream()
+            self.stream.close()
+            self.stream = None
+
         self.stopwork=1
         self.queueLock=0
         self.is_running=0
@@ -867,12 +883,11 @@ class audioCommunication(threading.Thread):
         return data
     
 def get_rms2( block ):
-    # RMS amplitude is defined as the square root of the 
+    # RMS amplitude is defined as the square root of the
     # mean over time of the square of the amplitude.
-    # so we need to convert this string of bytes into 
+    # so we need to convert this string of bytes into
     # a string of 16-bit samples...
-
-    # we will get one short out for each 
+    # we will get one short out for each
     # two chars in the string.
     count = len(block)/2
     format = "%dh"%(count)
@@ -881,9 +896,9 @@ def get_rms2( block ):
     # iterate over the block.
     sum_squares = 0.0
     for sample in shorts:
-        # sample is a signed short in +/- 32768. 
+        # sample is a signed short in +/- 32768.
         # normalize it to 1.0
-        n = sample * SHORT_NORMALIZE
+        n = sample * (1.0/32768.0)
         sum_squares += n*n
 
     return math.sqrt( sum_squares / count )
@@ -891,7 +906,7 @@ def get_rms2( block ):
 class audioCommunication2(threading.Thread):
 
     def __init__(self, cfg):
-        super(audioCommunication, self).__init__()
+        super(audioCommunication2, self).__init__()
         self.initCommunication()
         self.timeout=cfg.timeout
         self.stopwork=0
@@ -900,16 +915,20 @@ class audioCommunication2(threading.Thread):
         self.is_running=1
         self.pa = pyaudio.PyAudio()
         self.device_index = cfg.deviceIndex
-        self.tap_threshold = INITIAL_TAP_THRESHOLD
         self.noisycount = 0
-        
+        self.bSquelchIoerror = int(1) != 0
+        self.name="audioCommunication2"
+
+    def initCommunication(self):
+        print "Initializing audio communication => geiger 2\r\n"
+
     def run(self):
         try:
             print "Gathering data started => geiger 2\r\n"
             while(self.stopwork==0):
                 result=self.getData()
                 while (self.queueLock==1):
-                    print "Geiger communication: quene locked! => geiger 1\r\n"
+                    print "Geiger communication: quene locked! => geiger 2\r\n"
                     time.sleep(0.5)
                 self.queueLock=1
                 self.queue.append(result)
@@ -917,45 +936,65 @@ class audioCommunication2(threading.Thread):
                 print "Geiger sample => geiger 2:\tCPM =",result[0],"\t",str(result[1]),"\r\n"
 
             print "Gathering data from Geiger stopped => geiger 2\r\n"
-            self.pa.terminate()
         except Exception as e:
             print "Problem with audio port => geiger 2:\r\n\t", str(e),"\r\nExiting\r\n"
             self.stop()
             sys.exit(1)
 
-    def initCommunication(self):
-        print "Initializing audio communication => geiger 2\r\n"
-
     def getData(self):
-        self.stream = self.pa.open(format = FORMAT, channels = CHANNELS, rate = RATE, input = True, input_device_index = self.device_index, frames_per_buffer = INPUT_FRAMES_PER_BLOCK)
-        for i in range(600):
+        self.stream = self.pa.open(format = pyaudio.paInt16,
+                                   channels = 2,
+                                   rate = 44100,
+                                   input = True,
+                                   input_device_index = self.device_index,
+                                   start = True,
+                                   frames_per_buffer = int(44100*0.05))
+        for i in range(0, int(44100 / 1024 * 30)):
             try:
-                block = self.stream.read(INPUT_FRAMES_PER_BLOCK)
-
+                if not self.stream: break
+                block = self.stream.read(1024)
+            except (pyaudio.paInputOverflowed, IOError,):
+                #? buffer overflows are a real problem in pyaudio
+                #? depending on the choice of fRate and CHUNK.
+                #? signal them to the user, but ignore them -
+                #? play with fRate and CHUNK until they are at a minimum
+                if self.is_running and not self.bSquelchIoerror:
+                    print "paInputOverflow on audio port => 2"
+                continue
             except Exception as ex:
-                print "Problem with audio port => geiger 2:\r\n\t", str(ex),"\r\nExiting\r\n"
-                self.stream.stop_stream()
-                self.stream.close()
+                # pdb.set_trace()
+                print "Problem with audio port => 2\r\n\t", str(ex), "\r\n\tExiting\r\n\t"
+                if self.stream:
+                    self.stream.stop_stream()
+                    self.stream.close()
+                    self.stream = None
                 self.stop()
                 sys.exit(1)
 
             amplitude = get_rms2( block )
-            if amplitude > self.tap_threshold:
+            if amplitude > 0.010:
                 # noisy block
                 self.noisycount += 1
 
-        self.stream.stop_stream()
-        self.stream.close()
+        if self.stream:
+            self.stream.stop_stream()
+            self.stream.close()
+            self.stream=None
 
         if self.noisycount >= 0:
             cpm = self.noisycount * ( 60 / 30 )
             self.noisycount = 0
-            
+
         utcTime=datetime.datetime.utcnow()
         data=[cpm, utcTime]
         return data
 
     def stop(self):
+        if self.stream:
+            self.stream.stop_stream()
+            self.stream.close()
+            self.stream = None
+
         self.stopwork=1
         self.queueLock=0
         self.is_running=0
@@ -1108,47 +1147,47 @@ class webCommunication2():
 ################################################################################
 # Main code
 ################################################################################
-# check if file exists, if not, create one and exit
-if (os.path.isfile("config.txt")==0):
-    print "\tNo configuration file, creating default one.\r\n\t"
-
-    try:
-        f = open("config.txt", 'w')
-        f.write("# Parameter names are not case-sensitive\r\n")
-        f.write("# Parameter values are case-sensitive\r\n")
-        f.write("user=test_user\r\n")
-        f.write("password=test_password\r\n")
-        f.write("user2=test_user\r\n")
-        f.write("password2=test_password\r\n")
-        f.write("# Port is usually /dev/ttyUSBx in Linux and COMx in Windows\r\n")
-        f.write("serialport=/dev/ttyUSB0\r\n")
-        f.write("speed=2400\r\n")
-        f.write("serialport2=/dev/ttyUSB1\r\n")
-        f.write("speed2=2400\r\n")
-        f.write("# Protocols: demo, mygeiger, gmc, netio, audio\r\n")
-        f.write("protocol=demo\r\n")
-        f.write("protocol2=demo\r\n")
-        f.write("# In case of audio, input the device number here, default is 0.\r\n")
-        p = pyaudio.PyAudio()
-        info = p.get_host_api_info_by_index(0)
-        numdevices = info.get('deviceCount')
-        #for each audio device, determine if is an input or an output and add it to the appropriate list and dictionary
-        for i in range (0,numdevices):
-            if p.get_device_info_by_host_api_device_index(0,i).get('maxInputChannels')>0:
-                f.write("# %d - %s \r\n"%(i,p.get_device_info_by_host_api_device_index(0,i).get('name')))
-        p.terminate()
-        f.write("device=0\r\n")
-        f.write("device2=0\r\n")
-        f.close()
-        print "\tPlease open config.txt file using text editor and update configuration.\r\n"
-        exit(1)
-    except Exception as e:
-        print "\tFailed to create configuration file\r\n\t",str(e)
-    exit(1)
-
-else:
+def main():
     # main loop is in while loop
-    try:
+    # check if file exists, if not, create one and exit
+    if (os.path.isfile("config.txt")==0):
+        print "\tNo configuration file, creating default one.\r\n\t"
+
+        try:
+            f = open("config.txt", 'w')
+            f.write("# Parameter names are not case-sensitive\r\n")
+            f.write("# Parameter values are case-sensitive\r\n")
+            f.write("user=test_user\r\n")
+            f.write("password=test_password\r\n")
+            f.write("user2=test_user\r\n")
+            f.write("password2=test_password\r\n")
+            f.write("# Port is usually /dev/ttyUSBx in Linux and COMx in Windows\r\n")
+            f.write("serialport=/dev/ttyUSB0\r\n")
+            f.write("speed=2400\r\n")
+            f.write("serialport2=/dev/ttyUSB1\r\n")
+            f.write("speed2=2400\r\n")
+            f.write("# Protocols: demo, mygeiger, gmc, netio, audio\r\n")
+            f.write("protocol=demo\r\n")
+            f.write("protocol2=demo\r\n")
+            f.write("# In case of audio, input the device number here, default is 0.\r\n")
+            p = pyaudio.PyAudio()
+            info = p.get_host_api_info_by_index(0)
+            #for each audio device, determine if is an input or an output and add it to the appropriate list and dictionary
+            for i in range (0,info.get('deviceCount')):
+                if p.get_device_info_by_host_api_device_index(0,i).get('maxInputChannels')>0:
+                    f.write("# %d - %s \r\n"%(i,p.get_device_info_by_host_api_device_index(0,i).get('name')))
+            f.write("device=0\r\n")
+            f.write("device2=0\r\n")
+            print "\tPlease open config.txt file using text editor and update configuration.\r\n"
+        except Exception as e:
+            print "\tFailed to create configuration file\r\n\t",str(e)
+        finally:
+            time.sleep(1)
+            p.terminate()
+            f.close()
+        sys.exit(1)
+
+    else:
         # create and read configuration data
         cfg=config()
         cfg.readConfig()
@@ -1195,63 +1234,77 @@ else:
         else:
             print "Unknown protocol configured, can't run => geiger 2\r\n"
             sys.exit(1)
+            
+        try:
+            # create web server communication object
+            webService=webCommunication(cfg)
+            webService2=webCommunication2(cfg2)
+            
+            # start measuring thread
+            geigerCommunication.start()
+            geigerCommunication2.start()
 
-        # create web server communication object
-        webService=webCommunication(cfg)
-        webService2=webCommunication2(cfg2)
-        
-        # start measuring thread
-        geigerCommunication.start()
-        geigerCommunication2.start()
+            # Now send data to web site every 30 seconds
+            while(geigerCommunication.is_running==1 and geigerCommunication2.is_running==1):
+                sample=geigerCommunication.getResult()
+                sample2=geigerCommunication2.getResult()
 
-        # Now send data to web site every 30 seconds
-        while(geigerCommunication.is_running==1 and geigerCommunication2.is_running==1):
-            sample=geigerCommunication.getResult()
-            sample2=geigerCommunication2.getResult()
+                if sample[0]!=-1:
+                    # sample is valid, CPM !=-1
+                    print "Average result => geiger 1:\tCPM =",sample[0],"\t",str(sample[1]),"\r\n"
+                    try:
+                        webService.sendSample(sample)
+                    except Exception as e:
+                        print "Error communicating server => geiger 1:\r\n\t", str(e),"\r\n"
 
-            if sample[0]!=-1:
-                # sample is valid, CPM !=-1
-                print "Average result => geiger 1:\tCPM =",sample[0],"\t",str(sample[1]),"\r\n"
-                try:
-                    webService.sendSample(sample)
-                except Exception as e:
-                    print "Error communicating server => geiger 1:\r\n\t", str(e),"\r\n"
+                    print "Waiting 30 seconds => geiger 1\r\n"
+                    # actually waiting 30x1 seconds, it's has better response when CTRL+C is used, maybe will be changed in future
+                    for i in range(0,30):
+                        time.sleep(1)
+                else:
+                    print "No samples in queue, waiting 5 seconds => geiger 1\r\n"
+                    for i in range(0,5):
+                        time.sleep(1)
 
-                print "Waiting 30 seconds => geiger 1\r\n"
-                # actually waiting 30x1 seconds, it's has better response when CTRL+C is used, maybe will be changed in future
-                for i in range(0,30):
-                    time.sleep(1)
-            else:
-                print "No samples in queue, waiting 5 seconds => geiger 1\r\n"
-                for i in range(0,5):
-                    time.sleep(1)
+                if sample2[0]!=-1:
+                    # sample2 is valid, CPM !=-1
+                    print "Average result => geiger 2:\tCPM =",sample2[0],"\t",str(sample2[1]),"\r\n"
+                    try:
+                        webService2.sendSample(sample2)
+                    except Exception as e:
+                        print "Error communicating server => geiger 2:\r\n\t", str(e),"\r\n"
 
-            if sample2[0]!=-1:
-                # sample2 is valid, CPM !=-1
-                print "Average result => geiger 2:\tCPM =",sample2[0],"\t",str(sample2[1]),"\r\n"
-                try:
-                    webService2.sendSample(sample2)
-                except Exception as e:
-                    print "Error communicating server => geiger 2:\r\n\t", str(e),"\r\n"
+                    print "Waiting 30 seconds => geiger 2\r\n"
+                    # actually waiting 30x1 seconds, it's has better response when CTRL+C is used, maybe will be changed in future
+                    for i in range(0,30):
+                        time.sleep(1)
+                else:
+                    print "No samples in queue, waiting 5 seconds => geiger 2\r\n"
+                    for i in range(0,5):
+                        time.sleep(1)
 
-                print "Waiting 30 seconds => geiger 2\r\n"
-                # actually waiting 30x1 seconds, it's has better response when CTRL+C is used, maybe will be changed in future
-                for i in range(0,30):
-                    time.sleep(1)
-            else:
-                print "No samples in queue, waiting 5 seconds => geiger 2\r\n"
-                for i in range(0,5):
-                    time.sleep(1)
+        except KeyboardInterrupt as e:
+            print "\r\nCTRL+C pressed, exiting program\r\n\t", str(e), "\r\n"
 
-    except KeyboardInterrupt as e:
-        print "\r\nCTRL+C pressed, exiting program\r\n\t", str(e), "\r\n"
+        except SystemExit:
+            print "\r\nSystem exit\r\n\t",str(e),"\r\n"
+
+        except Exception as e:
+            print "\r\nUnhandled error\r\n\t",str(e),"\r\n"
+
         geigerCommunication.stop()
         geigerCommunication2.stop()
 
-    except Exception as e:
-        print "\r\nUnhandled error\r\n\t",str(e),"\r\n"
-        geigerCommunication.stop()
-        geigerCommunication2.stop()
+        # Threading fix
+        print "Waiting and reap threads"
+        time.sleep(1)
+        for numThread in threading.enumerate():
+            if numThread.isDaemon(): continue
+            if numThread.getName() == 'MainThread': continue
+            print "Stopping alive thread: ", numThread.getName(), "\r\n\t"
+            numThread.stop()
+            time.sleep(1)
+        sys.exit(0)
 
-    geigerCommunication.stop()
-    geigerCommunication2.stop()
+if __name__ == '__main__':
+    main()

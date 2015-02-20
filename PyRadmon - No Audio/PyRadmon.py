@@ -7,7 +7,6 @@ import threading, thread
 import socket
 from collections import deque
 import random
-import pyaudio
 import math
 import struct
 
@@ -55,7 +54,6 @@ class config():
     MYGEIGER=2
     GMC=3
     NETIO=4
-    AUDIO=5
 
     def __init__(self):
         # define constants
@@ -65,7 +63,6 @@ class config():
         self.MYGEIGER=2
         self.GMC=3
         self.NETIO=4
-        self.AUDIO=5
 
         self.user="not_set"
         self.password="not_set"
@@ -74,7 +71,6 @@ class config():
         self.portSpeed=2400
         self.timeout=40 # not used for now
         self.protocol=self.UNKNOWN
-        self.deviceIndex=0
 
     def readConfig(self):
         print "Reading configuration:\r\n\t"
@@ -107,10 +103,6 @@ class config():
                         self.portSpeed=int(value)
                         print "\tSerial port speed configured\r\n\t"
 
-                    elif parameter=="device":
-                        self.deviceIndex=int(value)
-                        print "\tDevice number configured\r\n\t"
-
                     elif parameter=="protocol":
                         value=value.lower()
                         if value=="mygeiger":
@@ -121,8 +113,6 @@ class config():
                             self.protocol=self.GMC
                         elif value=="netio":
                             self.protocol=self.NETIO
-                        elif value=="audio":
-                            self.protocol=self.AUDIO
 
                     if self.protocol!=self.UNKNOWN:
                         print "\tProtocol configured\r\n\t"
@@ -392,162 +382,6 @@ class netio(baseGeigerCommunication):
         print "Please note data will be acquired once per 30 seconds => geiger 1\r\n"
 
 ################################################################################
-# Part 2b - audio geiger handeler
-################################################################################
-# if the noise was longer than this many blocks, it's not a 'tap'
-def get_rms( block ):
-    # RMS amplitude is defined as the square root of the
-    # mean over time of the square of the amplitude.
-    # so we need to convert this string of bytes into
-    # a string of 16-bit samples...
-    # we will get one short out for each
-    # two chars in the string.
-    count = len(block)/2
-    format = "%dh"%(count)
-    shorts = struct.unpack( format, block )
-
-    # iterate over the block.
-    sum_squares = 0.0
-    for sample in shorts:
-        # sample is a signed short in +/- 32768.
-        # normalize it to 1.0
-        n = sample * (1.0/32768.0)
-        sum_squares += n*n
-
-    return math.sqrt( sum_squares / count )
-
-class audioCommunication(threading.Thread):
-
-    def __init__(self, cfg):
-        super(audioCommunication, self).__init__()
-        self.initCommunication()
-        self.timeout=cfg.timeout
-        self.stopwork=0
-        self.queue=deque()
-        self.queueLock=0
-        self.is_running=1
-        self.pa = pyaudio.PyAudio()
-        self.device_index = cfg.deviceIndex
-        self.noisycount = 0
-        self.bSquelchIoerror = int(1) != 0
-        self.name="audioCommunication"
-
-    def initCommunication(self):
-        print "Initializing audio communication => geiger 1\r\n"
-
-    def run(self):
-        try:
-            print "Gathering data started => geiger 1\r\n"
-            while(self.stopwork==0):
-                result=self.getData()
-                while (self.queueLock==1):
-                    print "Geiger communication: quene locked! => geiger 1\r\n"
-                    time.sleep(0.5)
-                self.queueLock=1
-                self.queue.append(result)
-                self.queueLock=0
-                print "Geiger sample => geiger 1:\tCPM =",result[0],"\t",str(result[1]),"\r\n"
-
-            print "Gathering data from Geiger stopped => geiger 1\r\n"
-        except Exception as e:
-            print "Problem with audio port => geiger 1:\r\n\t", str(e),"\r\nExiting\r\n"
-            self.stop()
-            sys.exit(1)
-
-    def getData(self):
-        self.stream = self.pa.open(format = pyaudio.paInt16,
-                                   channels = 2,
-                                   rate = 44100,
-                                   input = True,
-                                   input_device_index = self.device_index,
-                                   start = True,
-                                   frames_per_buffer = int(44100*0.05))
-        for i in range(0, int(44100 / 1024 * 30)):
-            try:
-                if not self.stream: break
-                block = self.stream.read(1024)
-            except (pyaudio.paInputOverflowed, IOError,):
-                #? buffer overflows are a real problem in pyaudio
-                #? depending on the choice of fRate and CHUNK.
-                #? signal them to the user, but ignore them -
-                #? play with fRate and CHUNK until they are at a minimum
-                if self.is_running and not self.bSquelchIoerror:
-                    print "paInputOverflow on audio port => 1"
-                continue
-            except Exception as ex:
-                # pdb.set_trace()
-                print "Problem with audio port => 1\r\n\t", str(ex), "\r\n\tExiting\r\n\t"
-                if self.stream:
-                    self.stream.stop_stream()
-                    self.stream.close()
-                    self.stream = None
-                self.stop()
-                sys.exit(1)
-
-            amplitude = get_rms( block )
-            if amplitude > 0.010:
-                # noisy block
-                self.noisycount += 1
-
-        if self.stream:
-            self.stream.stop_stream()
-            self.stream.close()
-            self.stream=None
-
-        if self.noisycount >= 0:
-            cpm = self.noisycount * ( 60 / 30 )
-            self.noisycount = 0
-
-        utcTime=datetime.datetime.utcnow()
-        data=[cpm, utcTime]
-        return data
-
-    def stop(self):
-        if self.stream:
-            self.stream.stop_stream()
-            self.stream.close()
-            self.stream = None
-
-        self.stopwork=1
-        self.queueLock=0
-        self.is_running=0
-
-    def getResult(self):
-        # check if we have some data in queue
-        if len(self.queue)>0:
-
-            # check if it's safe to process queue
-            while (self.queueLock==1):
-                print "getResult: quene locked! => geiger 1\r\n"
-                time.sleep(0.5)
-
-            # put lock so measuring process will not interfere with queue,
-            # processing should be fast enought to not break data acquisition from geiger
-            self.queueLock=1
-
-            cpm=0
-            # now get sum of all CPM's
-            for singleData in self.queue:
-                cpm=cpm+singleData[0]
-
-            # and divide by number of elements
-            # to get mean value, 0.5 is for rounding up/down
-            cpm=int( ( float(cpm) / len(self.queue) ) +0.5)
-            # report with latest time from quene
-            utcTime=self.queue.pop()[1]
-
-            # clear queue and remove lock
-            self.queue.clear()
-            self.queueLock=0
-
-            data=[cpm, utcTime]
-        else:
-            # no data in queue, return invalid CPM data and current time
-            data=[-1, datetime.datetime.utcnow()]
-
-        return data
-
-################################################################################
 # Part 3 - Web server communication
 ################################################################################
 class webCommunication():
@@ -622,19 +456,11 @@ def main():
             f.write("# Protocols: demo, mygeiger, gmc, netio, audio\r\n")
             f.write("protocol=demo\r\n")
             f.write("# In case of audio, input the device number here, default is 0.\r\n")
-            p = pyaudio.PyAudio()
-            info = p.get_host_api_info_by_index(0)
-            #for each audio device, determine if is an input or an output and add it to the appropriate list and dictionary
-            for i in range (0,info.get('deviceCount')):
-                if p.get_device_info_by_host_api_device_index(0,i).get('maxInputChannels')>0:
-                    f.write("# %d - %s \r\n"%(i,p.get_device_info_by_host_api_device_index(0,i).get('name')))
-            f.write("device=0\r\n")
             print "\tPlease open config.txt file using text editor and update configuration.\r\n"
         except Exception as e:
             print "\tFailed to create configuration file\r\n\t",str(e)
         finally:
             time.sleep(1)
-            p.terminate()
             f.close()
         sys.exit(1)
     else:
@@ -654,9 +480,6 @@ def main():
         elif cfg.protocol==config.NETIO:
             print "Using NetIO protocol for 1 => geiger 1\r\n"
             geigerCommunication=netio(cfg)
-        elif cfg.protocol==config.AUDIO:
-            print "Using audio protocol for 1 => geiger 1\r\n"
-            geigerCommunication = audioCommunication(cfg)
         else:
             print "Unknown protocol configured, can't run => geiger 1\r\n"
             sys.exit(1)
