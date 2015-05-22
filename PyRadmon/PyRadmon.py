@@ -16,6 +16,7 @@ import time, datetime
 #  pyRadMon - logger for Geiger counters                                     #
 #  Original Copyright 2013 by station pl_gdn_1                               #
 #  Copyright 2014 by Auseklis Corporation, Richmond, Virginia, U.S.A.        #
+#  Copyright 2015 by Thibmo at Radmon.org                                    #
 #                                                                            #
 #  This file is part of The PyRadMon Project                                 #
 #  https://sourceforge.net/p/pyradmon                                        #
@@ -38,7 +39,7 @@ import time, datetime
 #  version is a.b.c, change in a or b means new functionality/bugfix,        #
 #  change in c = bugfix                                                      #
 #  do not uncomment line below, it's currently used in HTTP headers          #
-VERSION = "1.1.14"
+VERSION = "1.1.17"
 #  To see your online los, report a bug or request a new feature, please     #
 #  visit http://www.radmon.org and/or https://sourceforge.net/p/pyradmon     #
 ##############################################################################
@@ -185,7 +186,8 @@ class baseGeigerCommunication(threading.Thread):
             while(self.stopwork == 0):
                 result = self.getData()
                 while (self.queueLock == 1):
-                    print "Geiger communication: quene locked! => geiger 1\r\n"
+                    print "Geiger communication: queue locked! => geiger 1\r\n"
+                    logger.warning("Geiger communication: queue locked! => geiger 1")
                     time.sleep(0.5)
                 self.queueLock = 1
                 self.queue.append(result)
@@ -233,8 +235,8 @@ class baseGeigerCommunication(threading.Thread):
 
             # check if it's safe to process queue
             while(self.queueLock == 1):
-                print "getResult: quene locked! => geiger 1\r\n"
-                logger.warning("getResult: quene locked! => geiger 1")
+                print "getResult: queue locked! => geiger 1\r\n"
+                logger.warning("getResult: queue locked! => geiger 1")
                 time.sleep(0.5)
 
             # put lock so measuring process will not interfere with queue,
@@ -270,9 +272,9 @@ class Demo(baseGeigerCommunication):
 
         while(self.stopwork == 0):
             result = self.getData()
-            while (self.queueLock == 1):
-                print "Geiger communication: quene locked! => geiger 1\r\n"
-                logger.warning("Geiger communication: quene locked! => geiger 1")
+            while(self.queueLock == 1):
+                print "Geiger communication: queue locked! => geiger 1\r\n"
+                logger.warning("Geiger communication: queue locked! => geiger 1")
                 time.sleep(0.5)
             self.queueLock = 1
             self.queue.append(result)
@@ -392,7 +394,7 @@ class netio(baseGeigerCommunication):
         try:
             # we want data only once per 30 seconds, ignore rest
             # it's averaged for 60 seconds by device anyway
-            for i in range(0,30):
+            for i in range(0, 30):
                 time.sleep(1)
 
             # wait for data, should be already there (from last 30s)
@@ -403,7 +405,7 @@ class netio(baseGeigerCommunication):
             # read all available data
 
             # do not stop receiving unless it ends with \r\n
-            x=""
+            x = ""
             while(x.endswith("\r\n") == False and self.stopwork == 0):
                 while(self.serialPort.inWaiting() > 0 and self.stopwork == 0):
                     x = x + self.serialPort.read()
@@ -640,7 +642,7 @@ class webCommunication():
             time.sleep(0.5)
             data = s.recv(1024)
             time.sleep(0.5)
-            for i in range(10):
+            for i in range(0, 10):
                 if doneSend is False:
                     if data is not None:
                         httpResponse = str(data).splitlines()[0]
@@ -733,16 +735,16 @@ def main():
 
         try:
             # create web server communication object
-            webService=webCommunication(cfg)
+            webService = webCommunication(cfg)
 
             # start measuring thread
             geigerCommunication.start()
 
             # Now send data to web site every 30 seconds
-            while(geigerCommunication.is_running==1):
-                sample=geigerCommunication.getResult()
+            while(geigerCommunication.is_running == 1):
+                sample = geigerCommunication.getResult()
 
-                if sample[0]!=-1:
+                if sample[0] != -1:
                     # sample is valid, CPM !=-1
                     print "Average result => geiger 1:\tCPM =", sample[0], "\t", str(sample[1]), "\r\n"
                     try:
@@ -755,11 +757,11 @@ def main():
                     # Waiting 60x0.5 seconds,
                     # it has a better response when CTRL+C is used,
                     # might be changed in future
-                    for i in range(0,60):
+                    for i in range(0, 60):
                         time.sleep(0.5)
                 else:
                     print "No samples in queue, waiting 5 seconds => geiger 1\r\n"
-                    for i in range(0,5):
+                    for i in range(0, 5):
                         time.sleep(1)
                     continue
 
