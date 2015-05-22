@@ -712,6 +712,7 @@ def main():
             geigerCommunication = myGeiger(cfg)
         elif cfg.protocol == config.DEMO:
             print "Using Demo mode for 1 => geiger 1\r\n"
+            logger.info("Using DEMO protocol for 1 => geiger 1")
             geigerCommunication = Demo(cfg)
         elif cfg.protocol == config.GMC:
             print "Using GMC protocol for 1 => geiger 1\r\n"
