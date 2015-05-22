@@ -147,7 +147,7 @@ class config():
             print "\tFailed to read configuration file:\r\n\t" + str(e) + "\r\nExiting\r\n"
             logger.exception("Failed to read configuration file: " + str(e))
             # Set EOL for log
-            logger.info("---------------------------------------\r\n")
+            logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
             logging.shutdown()
             exit(1)
         # well done, configuration is ready to use
@@ -199,7 +199,7 @@ class baseGeigerCommunication(threading.Thread):
             logger.exception("Problem with serial port => geiger 1: " + str(e))
             self.stop()
             # Set EOL for log
-            logger.info("---------------------------------------\r\n")
+            logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
             logging.shutdown()
             sys.exit(1)
 
@@ -315,7 +315,7 @@ class myGeiger(baseGeigerCommunication):
             logger.exception("Problem in getData procedure (disconnected USB device?) => geiger 1: " + str(e))
             self.stop()
             # Set EOL for log
-            logger.info("---------------------------------------\r\n")
+            logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
             logging.shutdown()
             sys.exit(1)
 
@@ -348,7 +348,7 @@ class gmc(baseGeigerCommunication):
             logger.error("No response from device => geiger 1")
             self.stop()
             # Set EOL for log
-            logger.info("---------------------------------------\r\n")
+            logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
             logging.shutdown()
             sys.exit(1)
 
@@ -381,7 +381,7 @@ class gmc(baseGeigerCommunication):
             logger.exception("Problem in getData procedure (disconnected USB device?) => geiger 1: " + str(e))
             self.stop()
             # Set EOL for log
-            logger.info("---------------------------------------\r\n")
+            logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
             logging.shutdown()
             sys.exit(1)
 
@@ -424,7 +424,7 @@ class netio(baseGeigerCommunication):
             logger.exception("Problem in getData procedure (disconnected USB device?) => geiger 1: " + str(e))
             self.stop()
             # Set EOL for log
-            logger.info("---------------------------------------\r\n")
+            logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
             logging.shutdown()
             sys.exit(1)
 
@@ -499,7 +499,7 @@ class audioCommunication(threading.Thread):
             print "Problem with audio port => geiger 1:\r\n\t", str(e), "\r\nExiting\r\n"
             logger.exception("Problem with audio port => geiger 1: " + str(e))
             self.stop()# Set EOL for log
-            logger.info("---------------------------------------\r\n")
+            logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
             logging.shutdown()
             sys.exit(1)
 
@@ -534,7 +534,7 @@ class audioCommunication(threading.Thread):
                     self.stream = None
                 self.stop()
                 # Set EOL for log
-                logger.info("---------------------------------------\r\n")
+                logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
                 logging.shutdown()
                 sys.exit(1)
 
@@ -698,7 +698,7 @@ def main():
             p.terminate()
             f.close()
         # Set EOL for log
-        logger.info("---------------------------------------\r\n")
+        logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
         logging.shutdown()
         sys.exit(1)
     else:
@@ -726,7 +726,7 @@ def main():
             print "Unknown protocol configured, can't run => geiger 1\r\n"
             logger.error("Unknown protocol configured, can't run => geiger 1")
             # Set EOL for log
-            logger.info("---------------------------------------\r\n")
+            logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
             logging.shutdown()
             sys.exit(1)
 
@@ -789,7 +789,7 @@ def main():
             time.sleep(1)
         logger.info("Shutting down application *Bye-bye*")
         # Set EOL for log
-        logger.info("---------------------------------------\r\n")
+        logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
         logging.shutdown()
         sys.exit(0)
 
