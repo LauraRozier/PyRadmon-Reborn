@@ -522,18 +522,18 @@ def main():
         cfg.readConfig()
         # create geiger communication object
         if cfg.protocol == config.MYGEIGER:
-            print "Using myGeiger protocol for 1 => geiger 1\r\n"
-            logger.info("Using myGeiger protocol for 1 => geiger 1")
+            print "Using myGeiger protocol => geiger 1\r\n"
+            logger.info("Using myGeiger protocol => geiger 1")
             geigerCommunication = myGeiger(cfg)
         elif cfg.protocol == config.DEMO:
-            print "Using Demo mode for 1 => geiger 1\r\n"
-            logger.info("Using DEMO protocol for 1 => geiger 1")
+            print "Using Demo mode => geiger 1\r\n"
+            logger.info("Using DEMO protocol => geiger 1")
             geigerCommunication = Demo(cfg)
         elif cfg.protocol == config.GMC:
-            print "Using GMC protocol for 1 => geiger 1\r\n"
+            print "Using GMC protocol => geiger 1\r\n"
             geigerCommunication = gmc(cfg)
         elif cfg.protocol == config.NETIO:
-            print "Using NetIO protocol for 1 => geiger 1\r\n"
+            print "Using NetIO protocol => geiger 1\r\n"
             geigerCommunication = netio(cfg)
         else:
             print "Unknown protocol configured, can't run => geiger 1\r\n"

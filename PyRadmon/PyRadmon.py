@@ -185,7 +185,7 @@ class baseGeigerCommunication(threading.Thread):
 
             while(self.stopwork == 0):
                 result = self.getData()
-                while (self.queueLock == 1):
+                while(self.queueLock == 1):
                     print "Geiger communication: queue locked! => geiger 1\r\n"
                     logger.warning("Geiger communication: queue locked! => geiger 1")
                     time.sleep(0.5)
@@ -441,14 +441,14 @@ class netio(baseGeigerCommunication):
 # Part 2b - audio geiger handeler
 ################################################################################
 # if the noise was longer than this many blocks, it's not a 'tap'
-def get_rms( block ):
+def get_rms(block):
     # RMS amplitude is defined as the square root of the
     # mean over time of the square of the amplitude.
     # so we need to convert this string of bytes into
     # a string of 16-bit samples...
     # we will get one short out for each
     # two chars in the string.
-    count = len(block)/2
+    count = len(block) / 2
     format = "%dh"%(count)
     shorts = struct.unpack(format, block)
 
@@ -457,7 +457,7 @@ def get_rms( block ):
     for sample in shorts:
         # sample is a signed short in +/- 32768.
         # normalize it to 1.0
-        n = sample * (1.0/32768.0)
+        n = sample * (1.0 / 32768.0)
         sum_squares += n * n
 
     return math.sqrt(sum_squares / count)
@@ -512,7 +512,7 @@ class audioCommunication(threading.Thread):
                                    input = True,
                                    input_device_index = self.device_index,
                                    start = True,
-                                   frames_per_buffer = int(44100*0.05))
+                                   frames_per_buffer = int(44100 * 0.05))
         for i in range(0, int(44100 / 1024 * 30)):
             try:
                 if not self.stream: break
@@ -523,8 +523,8 @@ class audioCommunication(threading.Thread):
                 #? signal them to the user, but ignore them -
                 #? play with fRate and CHUNK until they are at a minimum
                 if self.is_running and not self.bSquelchIoerror:
-                    print "paInputOverflow on audio port => 1"
-                    logger.error("paInputOverflow on audio port => 1")
+                    print "paInputOverflow on audio port => %d"
+                    logger.error("paInputOverflow on audio port => %d")
                 continue
             except Exception as ex:
                 # pdb.set_trace()
@@ -709,21 +709,21 @@ def main():
         cfg.readConfig()
         # create geiger communication object
         if cfg.protocol == config.MYGEIGER:
-            print "Using myGeiger protocol for 1 => geiger 1\r\n"
-            logger.info("Using myGeiger protocol for 1 => geiger 1")
+            print "Using myGeiger protocol => geiger 1\r\n"
+            logger.info("Using myGeiger protocol => geiger 1")
             geigerCommunication = myGeiger(cfg)
         elif cfg.protocol == config.DEMO:
-            print "Using Demo mode for 1 => geiger 1\r\n"
-            logger.info("Using DEMO protocol for 1 => geiger 1")
+            print "Using Demo mode => geiger 1\r\n"
+            logger.info("Using DEMO protocol => geiger 1")
             geigerCommunication = Demo(cfg)
         elif cfg.protocol == config.GMC:
-            print "Using GMC protocol for 1 => geiger 1\r\n"
+            print "Using GMC protocol => geiger 1\r\n"
             geigerCommunication = gmc(cfg)
         elif cfg.protocol == config.NETIO:
-            print "Using NetIO protocol for 1 => geiger 1\r\n"
+            print "Using NetIO protocol => geiger 1\r\n"
             geigerCommunication = netio(cfg)
         elif cfg.protocol == config.AUDIO:
-            print "Using audio protocol for 1 => geiger 1\r\n"
+            print "Using audio protocol => geiger 1\r\n"
             geigerCommunication = audioCommunication(cfg)
         else:
             print "Unknown protocol configured, can't run => geiger 1\r\n"
