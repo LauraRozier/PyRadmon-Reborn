@@ -19,7 +19,7 @@ import time, datetime
 #  Copyright 2015 by Thibmo at Radmon.org                                    #
 #                                                                            #
 #  This file is part of The PyRadMon Project                                 #
-#  https://sourceforge.net/p/pyradmon                                        #
+#  https://sourceforge.net/p/pyradmon-reborn                                 #
 #                                                                            #
 #  PyRadMon is free software: you can redistribute it and/or modify it under #
 #  the terms of the GNU General Public License as published by the Free      #
@@ -635,7 +635,7 @@ class webCommunication():
 
         try:
             s.connect((self.HOST, self.PORT))
-            s.settimeout(10.0)
+            s.settimeout(10.0) # 10 seconds to timeout, this will prevent crash
             data = None
             doneSend = False
             s.send(request)
