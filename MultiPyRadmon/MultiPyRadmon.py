@@ -16,7 +16,7 @@ import time, datetime
 #  pyRadMon - logger for Geiger counters                                     #
 #  Original Copyright 2013 by station pl_gdn_1                               #
 #  Copyright 2014 by Auseklis Corporation, Richmond, Virginia, U.S.A.        #
-#  Copyright 2015 by Thibmo at Radmon.org                                    #
+#  Copyright 2015-2016 by Thibmo at Radmon.org                               #
 #                                                                            #
 #  This file is part of The PyRadMon Project                                 #
 #  https://sourceforge.net/p/pyradmon-reborn                                 #
@@ -39,7 +39,7 @@ import time, datetime
 #  version is a.b.c, change in a or b means new functionality/bugfix,        #
 #  change in c = bugfix                                                      #
 #  do not uncomment line below, it's currently used in HTTP headers          #
-VERSION="1.1.17"
+VERSION="1.2.0"
 #  To see your online los, report a bug or request a new feature, please     #
 #  visit http://www.radmon.org and/or https://sourceforge.net/p/pyradmon     #
 ##############################################################################
@@ -57,7 +57,7 @@ logger.setLevel(logging.DEBUG)
 # Read configuration from file + constants definition
 ##############################################################################
 class config():
-    # used as enums
+    # Used as enums
     UNKNOWN = 0
     DEMO = 1
     MYGEIGER = 2
@@ -66,7 +66,7 @@ class config():
     AUDIO = 5
 
     def __init__(self):
-        # define constants
+        # Define constants
         self.CONFIGFILE = "config.txt"
         self.UNKNOWN = 0
         self.DEMO = 1
@@ -74,24 +74,24 @@ class config():
         self.GMC = 3
         self.NETIO = 4
         self.AUDIO = 5
-
         self.user = "not_set"
         self.password = "not_set"
-
         self.portName = None
         self.portSpeed = 2400
-        self.timeout = 40 # not used for now
+        self.timeout = 40 # Not used for now
         self.protocol = self.UNKNOWN
         self.deviceIndex = 0
 
     def readConfig(self):
         print "Reading configuration:\r\n\t"
         logger.info("Reading configuration 1")
-        # if file is present then try to read configuration from it
+
+        # If file is present then try to read configuration from it
         try:
             f = open(self.CONFIGFILE)
             line = " "
-            # analyze file line by line, format is parameter=value
+
+            # Analyze file line by line, format is parameter=value
             while(line):
                 line = f.readline()
                 params = line.split("=")
@@ -104,29 +104,25 @@ class config():
                         self.user = value
                         print "\tUser name configured\r\n\t"
                         logger.info("User name 1 configured")
-
                     elif parameter == "password":
                         self.password = value
                         print "\tPassword configured\r\n\t"
                         logger.info("Password 1 configured")
-
                     elif parameter == "serialport":
                         self.portName = value
                         print "\tSerial port name 1 configured\r\n\t"
                         logger.info("Serial port name 1 configured")
-
                     elif parameter == "speed":
                         self.portSpeed = int(value)
                         print "\tSerial port speed 1 configured\r\n\t"
                         logger.info("Serial port speed 1 configured")
-                            
                     elif parameter == "device":
                         self.deviceIndex = int(value)
                         print "\tDevice number 1 configured\r\n\t"
                         logger.info("Device number 1 configured")
-
                     elif parameter == "protocol":
                         value = value.lower()
+
                         if value == "mygeiger":
                             self.protocol = self.MYGEIGER
                         elif value == "demo":
@@ -137,12 +133,15 @@ class config():
                             self.protocol = self.NETIO
                         elif value == "audio":
                             self.protocol = self.AUDIO
+                        else:
+                            self.protocol = self.UNKNOWN
 
                         if self.protocol != self.UNKNOWN:
                             print "\tProtocol 1 configured\r\n\t"
                             logger.info("Protocol 1 configured")
-                # end of if
-            # end of while
+                # End of if
+            # End of while
+
             f.close()
         except Exception as e:
             print "\tFailed to read configuration file 1:\r\n\t" + str(e) + "\r\nExiting\r\n"
@@ -151,11 +150,12 @@ class config():
             logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
             logging.shutdown()
             exit(1)
-        # well done, configuration is ready to use
+
+        # Well done, configuration is ready to use
         print ""
 
 class config2():
-    # used as enums
+    # Used as enums
     UNKNOWN = 0
     DEMO = 1
     MYGEIGER = 2
@@ -164,7 +164,7 @@ class config2():
     AUDIO = 5
 
     def __init__(self):
-        # define constants
+        # Define constants
         self.CONFIGFILE = "config.txt"
         self.UNKNOWN = 0
         self.DEMO = 1
@@ -172,24 +172,24 @@ class config2():
         self.GMC = 3
         self.NETIO = 4
         self.AUDIO = 5
-
         self.user = "not_set"
         self.password = "not_set"
-
         self.portName = None
         self.portSpeed = 2400
-        self.timeout = 40 # not used for now
+        self.timeout = 40 # Not used for now
         self.protocol = self.UNKNOWN
         self.deviceIndex = 0
 
     def readConfig(self):
         print "Reading configuration 2:\r\n\t"
         logger.info("Reading configuration 2")
-        # if file is present then try to read configuration from it
+
+        # If file is present then try to read configuration from it
         try:
             f = open(self.CONFIGFILE)
             line = " "
-            # analyze file line by line, format is parameter=value
+
+            # Analyze file line by line, format is parameter=value
             while(line):
                 line = f.readline()
                 params = line.split("=")
@@ -197,32 +197,26 @@ class config2():
                 if len(params) == 2:
                     parameter = params[0].strip().lower()
                     value = params[1].strip()
-                    
                     if parameter == "user2":
                         self.user = value
                         print "\tUser name 2 configured\r\n\t"
                         logger.info("User name 2 configured")
-
                     elif parameter == "password2":
                         self.password = value
                         print "\tPassword 2 configured\r\n\t"
                         logger.info("Password 2 configured")
-
                     elif parameter == "serialport2":
                         self.portName = value
                         print "\tSerial port name 2 configured\r\n\t"
                         logger.info("Serial port name 2 configured")
-
                     elif parameter == "speed2":
                         self.portSpeed = int(value)
                         print "\tSerial port speed 2 configured\r\n\t"
                         logger.info("Serial port speed 2 configured")
-                            
                     elif parameter == "device2":
                         self.deviceIndex = int(value)
                         print "\tDevice number 2 configured\r\n\t"
                         logger.info("Device number 2 configured")
-
                     elif parameter == "protocol2":
                         value = value.lower()
                         if value == "mygeiger":
@@ -235,12 +229,15 @@ class config2():
                             self.protocol = self.NETIO
                         elif value == "audio":
                             self.protocol = self.AUDIO
+                        else:
+                            self.protocol = self.UNKNOWN
 
                         if self.protocol != self.UNKNOWN:
                             print "\tProtocol 2 configured\r\n\t"
                             logger.info("Protocol 2 configured")
-                # end of if
-            # end of while
+                # End of if
+            # End of while
+
             f.close()
         except Exception as e:
             print "\tFailed to read configuration file 2:\r\n\t" + str(e) + "\r\nExiting\r\n"
@@ -249,6 +246,7 @@ class config2():
             logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
             logging.shutdown()
             exit(1)
+
         # well done, configuration is ready to use
         print ""
 
@@ -259,9 +257,7 @@ class config2():
 # creating new class based on baseGeigerCommunication, as it's done in
 # classes Demo and myGeiger
 ################################################################################
-
 class baseGeigerCommunication(threading.Thread):
-
     def __init__(self, cfg):
         super(baseGeigerCommunication, self).__init__()
         self.sPortName = cfg.portName
@@ -278,15 +274,16 @@ class baseGeigerCommunication(threading.Thread):
             print "Gathering data started => geiger 1\r\n"
             self.serialPort = serial.Serial(self.sPortName, self.sPortSpeed, timeout = 1)
             self.serialPort.flushInput()
-            
             self.initCommunication()
 
             while(self.stopwork == 0):
                 result = self.getData()
+
                 while(self.queueLock == 1):
                     print "Geiger communication: queue locked! => geiger 1\r\n"
                     logger.warning("Geiger communication: queue locked! => geiger 1")
                     time.sleep(0.5)
+
                 self.queueLock = 1
                 self.queue.append(result)
                 self.queueLock = 0
@@ -309,11 +306,13 @@ class baseGeigerCommunication(threading.Thread):
     def sendCommand(self, command):
         self.serialPort.flushInput()
         self.serialPort.write(command)
-        # assume that device responds within 0.5s
+        # Assume that device responds within 0.5s
         time.sleep(0.5)
         response = ""
+
         while(self.serialPort.inWaiting() > 0 and self.stopwork == 0):
             response = response + self.serialPort.read()
+
         return response
 
     def getData(self):
@@ -328,52 +327,49 @@ class baseGeigerCommunication(threading.Thread):
         self.is_running = 0
 
     def getResult(self):
-        # check if we have some data in queue
+        # Check if we have some data in queue
         if len(self.queue) > 0:
-
-            # check if it's safe to process queue
+            # Check if it's safe to process queue
             while(self.queueLock == 1):
                 print "getResult: queue locked! => geiger 1\r\n"
                 logger.warning("getResult: queue locked! => geiger 1")
                 time.sleep(0.5)
 
-            # put lock so measuring process will not interfere with queue,
+            # Put lock so measuring process will not interfere with queue,
             # processing should be fast enought to not break data acquisition from geiger
             self.queueLock = 1
-
             cpm = 0
-            # now get sum of all CPM's
+
+            # Now get sum of all CPM's
             for singleData in self.queue:
                 cpm = cpm + singleData[0]
 
-            # and divide by number of elements
-            # to get mean value, 0.5 is for rounding up/down
+            # And divide by number of elements to get mean value, 0.5 is for rounding up/down
             cpm = int((float(cpm) / len(self.queue)) + 0.5)
-            # report with latest time from quene
+            # Report with latest time from quene
             utcTime = self.queue.pop()[1]
-
-            # clear queue and remove lock
+            # Clear queue and remove lock
             self.queue.clear()
             self.queueLock = 0
-
             data = [cpm, utcTime]
         else:
-            # no data in queue, return invalid CPM data and current time
+            # No data in queue, return invalid CPM data and current time
             data = [-1, datetime.datetime.utcnow()]
 
         return data
 
 class Demo(baseGeigerCommunication):
-
     def run(self):
         print "Gathering data started => geiger 1\r\n"
 
         while(self.stopwork == 0):
             result = self.getData()
+
             while(self.queueLock == 1):
                 print "Geiger communication: quene locked! => geiger 1\r\n"
                 logger.warning("Geiger communication: queue locked! => geiger 1")
                 time.sleep(0.5)
+
             self.queueLock = 1
             self.queue.append(result)
             self.queueLock = 0
@@ -384,23 +380,25 @@ class Demo(baseGeigerCommunication):
     def getData(self):
         for i in range(0, 5):
             time.sleep(1)
+
         cpm = random.randint(5, 40)
         utcTime = datetime.datetime.utcnow()
         data = [cpm, utcTime]
         return data
 
 class myGeiger(baseGeigerCommunication):
-
     def getData(self):
         cpm = -1
+
         try:
-            # wait for data
+            # Wait for data
             while(self.serialPort.inWaiting() == 0 and self.stopwork == 0):
                 time.sleep(1)
 
-            time.sleep(0.1) # just to ensure all CPM bytes are in serial port buffer
-            # read all available data
+            time.sleep(0.1) # Just to ensure all CPM bytes are in serial port buffer
+            # Read all available data
             x = ""
+
             while(self.serialPort.inWaiting() > 0 and self.stopwork == 0):
                 x = x + self.serialPort.read()
 
@@ -420,29 +418,21 @@ class myGeiger(baseGeigerCommunication):
             sys.exit(1)
 
 class gmc(baseGeigerCommunication):
-
     def initCommunication(self):
-        
         print "Initializing GMC protocol communication => geiger 1\r\n"
         logger.info("Initializing GMC protocol communication => geiger 1")
-        # get firmware version
+        # Get firmware version
         response = self.sendCommand("<GETVER>>")
-        
+
         if len(response) > 0:
             print "Found GMC-compatible device, version => geiger 1: ", response, "\r\n"
-            # get serial number
-            # serialnum=self.sendCommand("<GETSERIAL>>")
-            # serialnum.int=struct.unpack('!1H', serialnum(7))[0]
-            # print "Device Serial Number is: ", serialnum.int
-            # disable heartbeat, we will request data from script
+            # Disable heartbeat, we will request data from script
             self.sendCommand("<HEARTBEAT0>>")
             print "Please note data will be acquired once per 5 seconds => geiger 1\r\n"
-            # update the device time
+            # Update the device time
             unitTime = self.sendCommand("<GETDATETIME>>")
             print "Unit shows time as => geiger 1: ", unitTime, "\r\n"
-            # self.sendCommand("<SETDATETIME[" + time.strftime("%y%m%d%H%M%S") + "]>>")
             print "<SETDATETIME[" + time.strftime("%y%m%d%H%M%S") + "]>>"
-
         else:
             print "No response from device => geiger 1\r\n"
             logger.error("No response from device => geiger 1")
@@ -454,16 +444,17 @@ class gmc(baseGeigerCommunication):
 
     def getData(self):
         cpm = -1
+
         try:
-            # wait, we want sample every 30s
+            # Wait, we want sample every 30s
             for i in range(0, 3):
                 time.sleep(1)
-            
-            # send request
+
+            # Send request
             response = self.sendCommand("<GETCPM>>")
-            
+
             if len(response) == 2:
-                # convert bytes to 16 bit int
+                # Convert bytes to 16 bit int
                 cpm = ord(response[0]) * 256 + ord(response[1])
             else:
                 print "Unknown response to CPM request, device is not GMC-compatible? => geiger 1\r\n"
@@ -471,11 +462,11 @@ class gmc(baseGeigerCommunication):
                 self.stop()
                 logger.shutdown()
                 sys.exit(1)
-                
+
             utcTime = datetime.datetime.utcnow()
             data = [cpm, utcTime]
             return data
-            
+
         except Exception as e:
             print "\r\nProblem in getData procedure (disconnected USB device?) => geiger 1:\r\n\t", str(e), "\r\nExiting\r\n"
             logger.exception("Problem in getData procedure (disconnected USB device?) => geiger 1: " + str(e))
@@ -486,35 +477,33 @@ class gmc(baseGeigerCommunication):
             sys.exit(1)
 
 class netio(baseGeigerCommunication):
-
     def getData(self):
         cpm = -1
+
         try:
-            # we want data only once per 30 seconds, ignore rest
-            # it's averaged for 60 seconds by device anyway
+            # We want data only once per 30 seconds, ignore rest it's averaged for 60 seconds by device anyway
             for i in range(0, 30):
                 time.sleep(1)
 
-            # wait for data, should be already there (from last 30s)
+            # Wait for data, should be already there (from last 30s)
             while(self.serialPort.inWaiting() == 0 and self.stopwork == 0):
                 time.sleep(0.5)
-            
-            time.sleep(0.1) # just to ensure all CPM bytes are in serial port buffer
-            # read all available data
 
-            # do not stop receiving unless it ends with \r\n
+            time.sleep(0.1) # Just to ensure all CPM bytes are in serial port buffer
+            # Read all available data do not stop receiving unless it ends with \r\n
             x = ""
+
             while(x.endswith("\r\n") == False and self.stopwork == 0):
                 while(self.serialPort.inWaiting() > 0 and self.stopwork == 0):
                     x = x + self.serialPort.read()
 
-            # if CTRL+C pressed then x can be invalid so check it
+            # If CTRL+C pressed then x can be invalid so check it
             if x.endswith("\r\n"):
-                # we want only latest data, ignore older
+                # We want only latest data, ignore older
                 tmp = x.splitlines()
                 x = tmp[len(tmp) - 1]
                 cpm = int(x)
-            
+
             utcTime = datetime.datetime.utcnow()
             data = [cpm, utcTime]
             return data
@@ -536,7 +525,6 @@ class netio(baseGeigerCommunication):
         print "Please note data will be acquired once per 30 seconds => geiger 1\r\n"
 
 class baseGeigerCommunication2(threading.Thread):
-
     def __init__(self, cfg2):
         super(baseGeigerCommunication2, self).__init__()
         self.sPortName = cfg2.portName
@@ -553,15 +541,16 @@ class baseGeigerCommunication2(threading.Thread):
             print "Gathering data started => geiger 2\r\n"
             self.serialPort = serial.Serial(self.sPortName, self.sPortSpeed, timeout = 1)
             self.serialPort.flushInput()
-            
             self.initCommunication()
 
             while(self.stopwork == 0):
                 result = self.getData()
+
                 while(self.queueLock == 1):
                     print "Geiger communication: queue locked! => geiger 2\r\n"
                     logger.warning("Geiger communication: queue locked! => geiger 2")
                     time.sleep(0.5)
+
                 self.queueLock = 1
                 self.queue.append(result)
                 self.queueLock = 0
@@ -584,11 +573,13 @@ class baseGeigerCommunication2(threading.Thread):
     def sendCommand(self, command):
         self.serialPort.flushInput()
         self.serialPort.write(command)
-        # assume that device responds within 0.5s
+        # Sssume that device responds within 0.5s
         time.sleep(0.5)
         response = ""
+
         while(self.serialPort.inWaiting() > 0 and self.stopwork == 0):
             response = response + self.serialPort.read()
+
         return response
 
     def getData(self):
@@ -603,52 +594,50 @@ class baseGeigerCommunication2(threading.Thread):
         self.is_running = 0
 
     def getResult(self):
-        # check if we have some data in queue
+        # Check if we have some data in queue
         if len(self.queue) > 0:
 
-            # check if it's safe to process queue
+            # Check if it's safe to process queue
             while(self.queueLock == 1):
                 print "getResult: queue locked! => geiger 2\r\n"
                 logger.warning("getResult: queue locked! => geiger 2")
                 time.sleep(0.5)
 
-            # put lock so measuring process will not interfere with queue,
+            # Put lock so measuring process will not interfere with queue,
             # processing should be fast enought to not break data acquisition from geiger
             self.queueLock = 1
 
             cpm = 0
-            # now get sum of all CPM's
+            # Now get sum of all CPM's
             for singleData in self.queue:
                 cpm = cpm + singleData[0]
 
-            # and divide by number of elements
-            # to get mean value, 0.5 is for rounding up/down
+            # And divide by number of elements to get mean value, 0.5 is for rounding up/down
             cpm = int((float(cpm) / len(self.queue)) + 0.5)
-            # report with latest time from quene
+            # Report with latest time from quene
             utcTime = self.queue.pop()[1]
-
-            # clear queue and remove lock
+            # Clear queue and remove lock
             self.queue.clear()
             self.queueLock = 0
-
             data = [cpm, utcTime]
         else:
-            # no data in queue, return invalid CPM data and current time
+            # No data in queue, return invalid CPM data and current time
             data = [-1, datetime.datetime.utcnow()]
 
         return data
 
 class Demo2(baseGeigerCommunication2):
-
     def run(self):
         print "Gathering data started => geiger 2\r\n"
 
         while(self.stopwork == 0):
             result = self.getData()
+
             while(self.queueLock == 1):
                 print "Geiger communication: queue locked! => geiger 2\r\n"
                 logger.warning("Geiger communication: queue locked! => geiger 2")
                 time.sleep(0.5)
+
             self.queueLock = 1
             self.queue.append(result)
             self.queueLock = 0
@@ -659,22 +648,23 @@ class Demo2(baseGeigerCommunication2):
     def getData(self):
         for i in range(0, 5):
             time.sleep(1)
+
         cpm = random.randint(5, 40)
         utcTime = datetime.datetime.utcnow()
         data = [cpm, utcTime]
         return data
 
 class myGeiger2(baseGeigerCommunication2):
-
     def getData(self):
         cpm = -1
+
         try:
-            # wait for data
+            # Wait for data
             while(self.serialPort.inWaiting() == 0 and self.stopwork == 0):
                 time.sleep(1)
 
-            time.sleep(0.1) # just to ensure all CPM bytes are in serial port buffer
-            # read all available data
+            time.sleep(0.1) # Just to ensure all CPM bytes are in serial port buffer
+            # Read all available data
             x = ""
             while(self.serialPort.inWaiting() > 0 and self.stopwork == 0):
                 x = x + self.serialPort.read()
@@ -695,27 +685,20 @@ class myGeiger2(baseGeigerCommunication2):
             sys.exit(1)
 
 class gmc2(baseGeigerCommunication2):
-
     def initCommunication(self):
-        
         print "Initializing GMC protocol communication => geiger 2\r\n"
         logger.info("Initializing GMC protocol communication => geiger 2")
-        # get firmware version
+        # Get firmware version
         response=self.sendCommand("<GETVER>>")
-        
+
         if len(response) > 0:
             print "Found GMC-compatible device, version => geiger 2: ", response, "\r\n"
-            # get serial number
-            # serialnum=self.sendCommand("<GETSERIAL>>")
-            # serialnum.int=struct.unpack('!1H', serialnum(7))[0]
-            # print "Device Serial Number is: ", serialnum.int
-            # disable heartbeat, we will request data from script
+            # Disable heartbeat, we will request data from script
             self.sendCommand("<HEARTBEAT0>>")
             print "Please note data will be acquired once per 5 seconds => geiger 2\r\n"
-            # update the device time
+            # Update the device time
             unitTime=self.sendCommand("<GETDATETIME>>")
             print "Unit shows time as => geiger 2: ", unitTime, "\r\n"
-            # self.sendCommand("<SETDATETIME[" + time.strftime("%y%m%d%H%M%S") + "]>>")
             print "<SETDATETIME[" + time.strftime("%y%m%d%H%M%S") + "]>>"
 
         else:
@@ -729,16 +712,17 @@ class gmc2(baseGeigerCommunication2):
 
     def getData(self):
         cpm=-1
+
         try:
-            # wait, we want sample every 30s
+            # Wait, we want sample every 30s
             for i in range(0, 3):
                 time.sleep(1)
-            
-            # send request
+
+            # Send request
             response = self.sendCommand("<GETCPM>>")
             
             if len(response) == 2:
-                # convert bytes to 16 bit int
+                # Convert bytes to 16 bit int
                 cpm = ord(response[0]) * 256 + ord(response[1])
             else:
                 print "Unknown response to CPM request, device is not GMC-compatible? => geiger 2\r\n"
@@ -746,11 +730,11 @@ class gmc2(baseGeigerCommunication2):
                 self.stop()
                 logger.shutdown()
                 sys.exit(1)
-                
+
             utcTime = datetime.datetime.utcnow()
             data = [cpm, utcTime]
             return data
-            
+
         except Exception as e:
             print "\r\nProblem in getData procedure (disconnected USB device?) => geiger 2:\r\n\t", str(e), "\r\nExiting\r\n"
             logger.exception("Problem in getData procedure (disconnected USB device?) => geiger 2: " + str(e))
@@ -761,35 +745,33 @@ class gmc2(baseGeigerCommunication2):
             sys.exit(1)
 
 class netio2(baseGeigerCommunication2):
-
     def getData(self):
         cpm = -1
+
         try:
-            # we want data only once per 30 seconds, ignore rest
-            # it's averaged for 60 seconds by device anyway
+            # We want data only once per 30 seconds, ignore rest it's averaged for 60 seconds by device anyway
             for i in range(0, 30):
                 time.sleep(1)
 
-            # wait for data, should be already there (from last 30s)
+            # Wait for data, should be already there (from last 30s)
             while(self.serialPort.inWaiting() == 0 and self.stopwork == 0):
                 time.sleep(0.5)
             
-            time.sleep(0.1) # just to ensure all CPM bytes are in serial port buffer
-            # read all available data
-
-            # do not stop receiving unless it ends with \r\n
+            time.sleep(0.1) # Just to ensure all CPM bytes are in serial port buffer
+            # Read all available data do not stop receiving unless it ends with \r\n
             x = ""
+
             while(x.endswith("\r\n") == False and self.stopwork == 0):
                 while(self.serialPort.inWaiting() > 0 and self.stopwork == 0 ):
                     x = x + self.serialPort.read()
 
-            # if CTRL+C pressed then x can be invalid so check it
+            # If CTRL+C pressed then x can be invalid so check it
             if x.endswith("\r\n"):
-                # we want only latest data, ignore older
+                # We want only latest data, ignore older
                 tmp = x.splitlines()
                 x = tmp[len(tmp) - 1]
                 cpm = int(x)
-            
+
             utcTime = datetime.datetime.utcnow()
             data = [cpm, utcTime]
             return data
@@ -813,30 +795,27 @@ class netio2(baseGeigerCommunication2):
 ################################################################################
 # Part 2b - audio geiger handeler
 ################################################################################
-# if the noise was longer than this many blocks, it's not a 'tap'
+# If the noise was longer than this many blocks, it's not a 'tap'
 def get_rms(block):
-    # RMS amplitude is defined as the square root of the
-    # mean over time of the square of the amplitude.
-    # so we need to convert this string of bytes into
-    # a string of 16-bit samples...
-    # we will get one short out for each
-    # two chars in the string.
+    """
+      RMS amplitude is defined as the square root of the mean over time of the square of the amplitude.
+      So we need to convert this string of bytes into a string of 16-bit samples...
+      We will get one short out for each two chars in the string.
+    """
     count = len(block) / 2
     format = "%dh"%(count)
     shorts = struct.unpack(format, block)
-
-    # iterate over the block.
+    # Iterate over the block.
     sum_squares = 0.0
+
     for sample in shorts:
-        # sample is a signed short in +/- 32768.
-        # normalize it to 1.0
+        # Sample is a signed short in +/- 32768. Normalize it to 1.0
         n = sample * (1.0 / 32768.0)
         sum_squares += n * n
 
     return math.sqrt(sum_squares / count)
 
 class audioCommunication(threading.Thread):
-
     def __init__(self, cfg):
         super(audioCommunication, self).__init__()
         self.initCommunication()
@@ -847,6 +826,7 @@ class audioCommunication(threading.Thread):
         self.is_running = 1
         self.pa = pyaudio.PyAudio()
         self.device_index = cfg.deviceIndex
+        self.device_Channels = self.pa.get_device_info_by_index(self.device_index)['maxInputChannels']
         self.noisycount = 0
         self.bSquelchIoerror = int(1) != 0
         self.name = "audioCommunication"
@@ -858,12 +838,15 @@ class audioCommunication(threading.Thread):
     def run(self):
         try:
             print "Gathering data started => geiger 1\r\n"
+
             while(self.stopwork == 0):
                 result = self.getData()
+
                 while(self.queueLock == 1):
                     print "Geiger communication: quene locked! => geiger 1\r\n"
                     logger.warning("Geiger communication: quene locked! => geiger 1")
                     time.sleep(0.5)
+
                 self.queueLock = 1
                 self.queue.append(result)
                 self.queueLock = 0
@@ -873,40 +856,47 @@ class audioCommunication(threading.Thread):
         except Exception as e:
             print "Problem with audio port => geiger 1:\r\n\t", str(e), "\r\nExiting\r\n"
             logger.exception("Problem with audio port => geiger 1: " + str(e))
-            self.stop()# Set EOL for log
+            self.stop() # Set EOL for log
             logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
             logging.shutdown()
             sys.exit(1)
 
     def getData(self):
+        if self.device_Channels > 2:
+            self.device_Channels = 2
+
         self.stream = self.pa.open(format = pyaudio.paInt16,
-                                   channels = 2,
+                                   channels = self.device_Channels,
                                    rate = 44100,
                                    input = True,
                                    input_device_index = self.device_index,
                                    start = True,
                                    frames_per_buffer = int(44100 * 0.05))
+
         for i in range(0, int(44100 / 1024 * 30)):
             try:
                 if not self.stream: break
+
                 block = self.stream.read(1024)
             except (pyaudio.paInputOverflowed, IOError,):
-                #? buffer overflows are a real problem in pyaudio
-                #? depending on the choice of fRate and CHUNK.
-                #? signal them to the user, but ignore them -
-                #? play with fRate and CHUNK until they are at a minimum
+                """
+                  Buffer overflows are a real problem in pyaudio depending on the choice of fRate and CHUNK.
+                  Signal them to the user, but ignore them - play with fRate and CHUNK until they are at a minimum
+                """
                 if self.is_running and not self.bSquelchIoerror:
                     print "paInputOverflow on audio port => %d"
                     logger.error("paInputOverflow on audio port => %d")
+
                 continue
             except Exception as ex:
-                # pdb.set_trace()
                 print "Problem with audio port => 1\r\n\t", str(ex), "\r\n\tExiting\r\n\t"
                 logger.exception("Problem with serial port => geiger 1: " + str(ex))
+
                 if self.stream:
                     self.stream.stop_stream()
                     self.stream.close()
                     self.stream = None
+
                 self.stop()
                 # Set EOL for log
                 logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
@@ -914,8 +904,9 @@ class audioCommunication(threading.Thread):
                 sys.exit(1)
 
             amplitude = get_rms(block)
+
             if amplitude > 0.010:
-                # noisy block
+                # Noisy block
                 self.noisycount += 1
 
         if self.stream:
@@ -942,57 +933,53 @@ class audioCommunication(threading.Thread):
         self.is_running = 0
 
     def getResult(self):
-        # check if we have some data in queue
+        # Check if we have some data in queue
         if len(self.queue) > 0:
-
-            # check if it's safe to process queue
+            # Check if it's safe to process queue
             while(self.queueLock == 1):
                 print "getResult: quene locked! => geiger 1\r\n"
                 logger.warning("getResult: queue locked! => geiger 1")
                 time.sleep(0.5)
 
-            # put lock so measuring process will not interfere with queue,
-            # processing should be fast enought to not break data acquisition from geiger
+            """
+              Put a lock so measuring process will not interfere with queue,
+              processing should be fast enought to not break data acquisition from geiger
+            """
             self.queueLock = 1
-
             cpm = 0
-            # now get sum of all CPM's
+
+            # Now get sum of all CPM's
             for singleData in self.queue:
                 cpm = cpm + singleData[0]
 
-            # and divide by number of elements
-            # to get mean value, 0.5 is for rounding up/down
+            # And divide by number of elements to get mean value, 0.5 is for rounding up/down
             cpm = int((float(cpm) / len(self.queue)) + 0.5)
-            # report with latest time from quene
+            # Report with latest time from quene
             utcTime = self.queue.pop()[1]
-
-            # clear queue and remove lock
+            # Clear queue and remove lock
             self.queue.clear()
             self.queueLock = 0
-
             data = [cpm, utcTime]
         else:
-            # no data in queue, return invalid CPM data and current time
+            # No data in queue, return invalid CPM data and current time
             data = [-1, datetime.datetime.utcnow()]
 
         return data
     
 def get_rms2(block):
-    # RMS amplitude is defined as the square root of the
-    # mean over time of the square of the amplitude.
-    # so we need to convert this string of bytes into
-    # a string of 16-bit samples...
-    # we will get one short out for each
-    # two chars in the string.
+    """
+      RMS amplitude is defined as the square root of the mean over time of the square of the amplitude.
+      So we need to convert this string of bytes into a string of 16-bit samples...
+      We will get one short out for each two chars in the string.
+    """
     count = len(block) / 2
     format = "%dh"%(count)
     shorts = struct.unpack(format, block)
-
-    # iterate over the block.
+    # Iterate over the block.
     sum_squares = 0.0
+
     for sample in shorts:
-        # sample is a signed short in +/- 32768.
-        # normalize it to 1.0
+        # Sample is a signed short in +/- 32768. Normalize it to 1.0
         n = sample * (1.0 / 32768.0)
         sum_squares += n * n
 
@@ -1010,6 +997,7 @@ class audioCommunication2(threading.Thread):
         self.is_running = 1
         self.pa = pyaudio.PyAudio()
         self.device_index = cfg.deviceIndex
+        self.device_Channels = self.pa.get_device_info_by_index(self.device_index)['maxInputChannels']
         self.noisycount = 0
         self.bSquelchIoerror = int(1) != 0
         self.name = "audioCommunication2"
@@ -1021,12 +1009,15 @@ class audioCommunication2(threading.Thread):
     def run(self):
         try:
             print "Gathering data started => geiger 2\r\n"
+
             while(self.stopwork == 0):
                 result = self.getData()
+
                 while(self.queueLock == 1):
                     print "Geiger communication: quene locked! => geiger 2\r\n"
                     logger.warning("Geiger communication: quene locked! => geiger 2")
                     time.sleep(0.5)
+
                 self.queueLock = 1
                 self.queue.append(result)
                 self.queueLock = 0
@@ -1036,40 +1027,47 @@ class audioCommunication2(threading.Thread):
         except Exception as e:
             print "Problem with audio port => geiger 2:\r\n\t", str(e), "\r\nExiting\r\n"
             logger.exception("Problem with audio port => geiger 2: " + str(e))
-            self.stop()# Set EOL for log
+            self.stop() # Set EOL for log
             logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
             logging.shutdown()
             sys.exit(1)
 
     def getData(self):
+        if self.device_Channels > 2:
+            self.device_Channels = 2
+
         self.stream = self.pa.open(format = pyaudio.paInt16,
-                                   channels = 2,
+                                   channels = self.device_Channels,
                                    rate = 44100,
                                    input = True,
                                    input_device_index = self.device_index,
                                    start = True,
                                    frames_per_buffer = int(44100 * 0.05))
+
         for i in range(0, int(44100 / 1024 * 30)):
             try:
                 if not self.stream: break
+
                 block = self.stream.read(1024)
             except (pyaudio.paInputOverflowed, IOError,):
-                #? buffer overflows are a real problem in pyaudio
-                #? depending on the choice of fRate and CHUNK.
-                #? signal them to the user, but ignore them -
-                #? play with fRate and CHUNK until they are at a minimum
+                """
+                  Buffer overflows are a real problem in pyaudio depending on the choice of fRate and CHUNK.
+                  Signal them to the user, but ignore them - play with fRate and CHUNK until they are at a minimum
+                """
                 if self.is_running and not self.bSquelchIoerror:
                     print "paInputOverflow on audio port => %d"
                     logger.error("paInputOverflow on audio port => %d")
+
                 continue
             except Exception as ex:
-                # pdb.set_trace()
                 print "Problem with audio port => 2\r\n\t", str(ex), "\r\n\tExiting\r\n\t"
                 logger.exception("Problem with serial port => geiger 2: " + str(ex))
+
                 if self.stream:
                     self.stream.stop_stream()
                     self.stream.close()
                     self.stream = None
+
                 self.stop()
                 # Set EOL for log
                 logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
@@ -1077,8 +1075,9 @@ class audioCommunication2(threading.Thread):
                 sys.exit(1)
 
             amplitude = get_rms2(block)
+
             if amplitude > 0.010:
-                # noisy block
+                # Noisy block
                 self.noisycount += 1
 
         if self.stream:
@@ -1105,34 +1104,33 @@ class audioCommunication2(threading.Thread):
         self.is_running = 0
 
     def getResult(self):
-        # check if we have some data in queue
+        # Check if we have some data in queue
         if len(self.queue) > 0:
 
-            # check if it's safe to process queue
+            # Check if it's safe to process queue
             while(self.queueLock == 1):
                 print "getResult: quene locked! => geiger 2\r\n"
                 logger.warning("getResult: queue locked! => geiger 2")
                 time.sleep(0.5)
 
-            # put lock so measuring process will not interfere with queue,
-            # processing should be fast enought to not break data acquisition from geiger
+            """
+              Put a lock so measuring process will not interfere with queue,
+              processing should be fast enought to not break data acquisition from geiger
+            """
             self.queueLock = 1
-
             cpm = 0
-            # now get sum of all CPM's
+
+            # Now get sum of all CPM's
             for singleData in self.queue:
                 cpm = cpm + singleData[0]
 
-            # and divide by number of elements
-            # to get mean value, 0.5 is for rounding up/down
+            # And divide by number of elements to get mean value, 0.5 is for rounding up/down
             cpm = int((float(cpm) / len(self.queue)) + 0.5)
-            # report with latest time from quene
+            # Report with latest time from quene
             utcTime = self.queue.pop()[1]
-
-            # clear queue and remove lock
+            # Clear queue and remove lock
             self.queue.clear()
             self.queueLock = 0
-
             data = [cpm, utcTime]
         else:
             # no data in queue, return invalid CPM data and current time
@@ -1157,17 +1155,14 @@ class webCommunication():
 
         sampleCPM = sample[0]
         sampleTime = sample[1]
-
-        # format date and time as required
+        # Format date and time as required
         dtime = sampleTime.strftime("%Y-%m-%d%%20%H:%M:%S")
-
         print "Connecting to server => geiger 1\r\n"
         logger.info("Connecting to server => geiger 1")
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         url = "GET /radmon.php?user=" + self.user + "&password=" + self.password + "&function=submit&datetime=" + dtime + "&value=" + str(sampleCPM) + "&unit=CPM HTTP/1.1"
         request = url + "\r\nHost: www.radmon.org\r\nUser-Agent: pyRadMon " + VERSION + "\r\n\r\n"
         print "Sending average sample => geiger 1: " + str(sampleCPM) + " CPM\r\n"
-        #print "\r\n### HTTP Request ###\r\n"+request
 
         try:
             s.connect((self.HOST, self.PORT))
@@ -1178,23 +1173,25 @@ class webCommunication():
             time.sleep(0.5)
             data = s.recv(1024)
             time.sleep(0.5)
+
             for i in range(0, 10):
                 if doneSend is False:
                     if data is not None:
                         httpResponse = str(data).splitlines()[0]
                         print "Server response => geiger 1: ", httpResponse, "\r\n"
                         logger.info("Server response => geiger 1: " + httpResponse)
-                        if "incorrect login" in data.lower():
+
+                        if "incorrect" in data.lower():
                             print "You are using incorrect user/password combination => geiger 1!\r\n"
                             geigerCommunication.stop()
                             geigerCommunication2.stop()
                             sys.exit(1)
+
                         doneSend = True
         except Exception as ex:
             print "Could not communicate with the Server, timeout reached. => geiger 1: ",ex,"\r\n"
             logger.exception("Could not communicate with the Server, timeout reached. => geiger 1: " + str(ex))
         finally:
-            #print "\r\n### HTTP Response ###\r\n"+data+"\r\n"
             s.close()
 
 class webCommunication2():
@@ -1211,17 +1208,14 @@ class webCommunication2():
 
         sampleCPM = sample[0]
         sampleTime = sample[1]
-
-        # format date and time as required
+        # Format date and time as required
         dtime = sampleTime.strftime("%Y-%m-%d%%20%H:%M:%S")
-
         print "Connecting to server => geiger 2\r\n"
         logger.info("Connecting to server => geiger 2")
         s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         url = "GET /radmon.php?user=" + self.user + "&password=" + self.password + "&function=submit&datetime=" + dtime + "&value=" + str(sampleCPM) + "&unit=CPM HTTP/1.1"
         request = url + "\r\nHost: www.radmon.org\r\nUser-Agent: pyRadMon " + VERSION + "\r\n\r\n"
         print "Sending average sample => geiger 2: " + str(sampleCPM) + " CPM\r\n"
-        #print "\r\n### HTTP Request ###\r\n"+request
 
         try:
             s2.connect((self.HOST, self.PORT))
@@ -1232,32 +1226,36 @@ class webCommunication2():
             time.sleep(0.5)
             data = s2.recv(1024)
             time.sleep(0.5)
+
             for i in range(0, 10):
                 if doneSend is False:
                     if data is not None:
                         httpResponse = str(data).splitlines()[0]
                         print "Server response => geiger 2: ", httpResponse, "\r\n"
                         logger.info("Server response => geiger 2: " + httpResponse)
-                        if "incorrect login" in data.lower():
+
+                        if "incorrect" in data.lower():
                             print "You are using incorrect user/password combination => geiger 2!\r\n"
                             logger.error("You are using incorrect user/password combination => geiger 2!")
                             geigerCommunication.stop()
                             geigerCommunication2.stop()
                             sys.exit(1)
+
                         doneSend = True
         except Exception as ex:
             print "Could not communicate with the Server, timeout reached. => geiger 2: ", ex, "\r\n"
             logger.exception("Could not communicate with the Server, timeout reached. => geiger 2: " + str(ex))
         finally:
-            #print "\r\n### HTTP Response ###\r\n"+data+"\r\n"
             s2.close()
 
 ################################################################################
 # Main code
 ################################################################################
 def main():
-    # main loop is in while loop
-    # check if file exists, if not, create one and exit
+    """
+      Main loop is in while loop.
+      Check if file exists, if not, create one and exit
+    """
     if (os.path.isfile("config.txt") == 0):
         print "\tNo configuration file, creating default one.\r\n\t"
 
@@ -1279,11 +1277,16 @@ def main():
             f.write("protocol2=demo\r\n")
             f.write("# In case of audio, input the device number here, default is 0.\r\n")
             p = pyaudio.PyAudio()
-            info = p.get_host_api_info_by_index(0)
-            #for each audio device, determine if is an input or an output and add it to the appropriate list and dictionary
-            for i in range (0, info.get('deviceCount')):
-                if p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels') > 0:
-                   f.write("# " + str(i) + " - " + p.get_device_info_by_host_api_device_index(0, i).get('name') + " \r\n")
+
+            # For each audio device, determine if is an input or an output and add it to the appropriate list and dictionary
+            for i in range (0, p.get_device_count()):
+                dev = p.get_device_info_by_index(i)
+
+                if dev['maxInputChannels'] > 0:
+                    f.write("# " + str(i) + " - " + dev['name'] + " \r\n")
+                else:
+                    continue
+
             f.write("device=0\r\n")
             f.write("device2=0\r\n")
             print "\tPlease open config.txt file using text editor and update configuration.\r\n"
@@ -1294,16 +1297,17 @@ def main():
             time.sleep(1)
             p.terminate()
             f.close()
+
         # Set EOL for log
         logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
         logging.shutdown()
         sys.exit(1)
-
     else:
-        # create and read configuration data
+        # Create and read configuration data
         cfg = config()
         cfg.readConfig()
-        # create geiger communication object
+
+        # Create geiger communication object
         if cfg.protocol == config.MYGEIGER:
             print "Using myGeiger protocol => geiger 1\r\n"
             logger.info("Using myGeiger protocol => geiger 1")
@@ -1328,11 +1332,12 @@ def main():
             logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
             logging.shutdown()
             sys.exit(1)
-            
-        # create and read configuration 2 data
+
+        # Create and read configuration 2 data
         cfg2 = config2()
         cfg2.readConfig()
-        # create geiger communication object
+
+        # Create geiger communication object
         if cfg2.protocol == config2.MYGEIGER:
             print "Using myGeiger protocol => geiger 2\r\n"
             logger.info("Using myGeiger protocol => geiger 2")
@@ -1357,13 +1362,12 @@ def main():
             logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
             logging.shutdown()
             sys.exit(1)
-            
+
         try:
-            # create web server communication object
+            # Create web server communication object
             webService = webCommunication(cfg)
             webService2 = webCommunication2(cfg2)
-            
-            # start measuring thread
+            # Start measuring thread
             geigerCommunication.start()
             geigerCommunication2.start()
 
@@ -1373,8 +1377,9 @@ def main():
                 sample2 = geigerCommunication2.getResult()
 
                 if sample[0] != -1:
-                    # sample is valid, CPM !=-1
+                    # Sample is valid, CPM !=-1
                     print "Average result => geiger 1:\tCPM =", sample[0], "\t", str(sample[1]), "\r\n"
+
                     try:
                         webService.sendSample(sample)
                     except Exception as e:
@@ -1382,17 +1387,24 @@ def main():
                         logger.exception("Error communicating server => geiger 1: " + str(e))
 
                     print "Waiting 30 seconds => geiger 1\r\n"
-                    # actually waiting 30x1 seconds, it's has better response when CTRL+C is used, maybe will be changed in future
-                    for i in range(0, 30):
-                        time.sleep(1)
+
+                    """
+                      Waiting 60x0.5 seconds, it has a better response when CTRL+C is used,
+                      might be changed in future.
+                    """
+                    for i in range(0, 60):
+                        time.sleep(0.5)
                 else:
                     print "No samples in queue, waiting 5 seconds => geiger 1\r\n"
-                    for i in range(0, 5):
-                        time.sleep(1)
+                    for i in range(0, 10):
+                        time.sleep(0.5)
+
+                    continue
 
                 if sample2[0] != -1:
-                    # sample2 is valid, CPM !=-1
+                    # Sample2 is valid, CPM !=-1
                     print "Average result => geiger 2:\tCPM =", sample2[0], "\t", str(sample2[1]), "\r\n"
+
                     try:
                         webService2.sendSample(sample2)
                     except Exception as e:
@@ -1400,13 +1412,20 @@ def main():
                         logger.exception("Error communicating server => geiger 2: " + str(e))
 
                     print "Waiting 30 seconds => geiger 2\r\n"
-                    # actually waiting 30x1 seconds, it's has better response when CTRL+C is used, maybe will be changed in future
-                    for i in range(0, 30):
-                        time.sleep(1)
+
+                    """
+                      Waiting 60x0.5 seconds, it has a better response when CTRL+C is used,
+                      might be changed in future.
+                    """
+                    for i in range(0, 60):
+                        time.sleep(0.5)
                 else:
                     print "No samples in queue, waiting 5 seconds => geiger 2\r\n"
-                    for i in range(0, 5):
-                        time.sleep(1)
+
+                    for i in range(0, 10):
+                        time.sleep(0.5)
+
+                    continue
 
         except KeyboardInterrupt as e:
             print "\r\nCTRL+C pressed, exiting program\r\n\t", str(e), "\r\n"
@@ -1422,18 +1441,21 @@ def main():
 
         geigerCommunication.stop()
         geigerCommunication2.stop()
-
         # Threading fix
         print "Waiting and reap threads"
         logger.warning("Waiting and reap threads")
         time.sleep(1)
+
         for numThread in threading.enumerate():
             if numThread.isDaemon(): continue
+
             if numThread.getName() == 'MainThread': continue
+
             print "Stopping alive thread: ", numThread.getName(), "\r\n\t"
             logger.info("Stopping alive thread: " + numThread.getName())
             numThread.stop()
             time.sleep(1)
+
         logger.info("Shutting down application *Bye-bye*")
         # Set EOL for log
         logger.info("--------------------------------------- EOL ---------------------------------------\r\n")
