@@ -1,4 +1,5 @@
 # PyRadmon-Reborn
+[![Build Status](https://travis-ci.org/thibmo/PyRadmon-Reborn.svg?branch=master)](https://travis-ci.org/thibmo/PyRadmon-Reborn)  
 [//]: # (Title and short description)
 PyRadmon, a Python radiation monitoring util to use on both Linux and Windows.
 
