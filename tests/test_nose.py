@@ -4,10 +4,10 @@ To run tests : nosetests    test_nose.py
 Verobse (-v) : nosetests -v test_nose.py
 '''
 
-from PyRadmon_No_Audio.PyRadmon import config
+from PyRadmon_No_Audio.PyRadmon as PyRadmon
 
 # create and read configuration data
-cfg = config()
+cfg = PyRadmon.config()
 cfg.readConfig()
 
 def test_cfg_user():
