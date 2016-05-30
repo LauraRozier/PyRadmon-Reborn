@@ -18,20 +18,14 @@ To use PyRadmon Reborn on your Windows machine you would first have to follow th
     the installer must create the edit to the system variables.
 - Install PIP (If it is not yet installed)
   - Test if PIP is installed.  
-    ```python
-    python -m pip list
-    ```
+    ```python -m pip list```
   - If Python gave an error, you should [install PIP][PIPHelp].
 - Install PySerial
   - Install PySerial for Python 2.7 with it's default settings.  
-    ```python
-    python -m pip install pyserial
-    ```
+    ```python -m pip install pyserial```
 - Install PyAudio
   - Install PyAudio for Python 2.7 with it's default settings.  
-    ```python 
-    python -m pip install pyaudio
-    ```
+    ```python -m pip install pyaudio```
 - Download (Multi)PyRadmon.py
   - [Download][PyRadmonDownload] the preferred version.
   - Put the file to the preferred location.
@@ -58,17 +52,11 @@ To use PyRadmon Reborn on your Linux machine you would first have to follow the 
 - Download (Multi)PyRadmon.py
   - [Download][PyRadmonDownload] the preferred version.
     - For MultiPyRadmon  
-      ```sh
-      wget 'https://github.com/thibmo/PyRadmon-Reborn/releases/download/v1.2.0/MultiPyRadmon[.-.No.Audio].zip'
-      ```
-    - For PyRadmon 
-      ```sh
-      wget 'https://github.com/thibmo/PyRadmon-Reborn/releases/download/v1.2.0/PyRadmon[.-.No.Audio].zip'
-      ```
-  - Unpack the tarball to the preferred location.
-    ```sh
-    tar zxvf (Multi)PyRadmon.tar.gz -C ~/PyRadmon
-    ```
+      ```wget 'https://github.com/thibmo/PyRadmon-Reborn/releases/download/v1.2.0/MultiPyRadmon[.-.No.Audio].zip'```
+    - For PyRadmon  
+      ```wget 'https://github.com/thibmo/PyRadmon-Reborn/releases/download/v1.2.0/PyRadmon[.-.No.Audio].zip'```
+  - Unpack the tarball to the preferred location.  
+    ```tar zxvf (Multi)PyRadmon.tar.gz -C ~/PyRadmon```
 
 ### Getting PyRadmon Reborn to work
 [//]: # (TODO: Add getting started info here)
