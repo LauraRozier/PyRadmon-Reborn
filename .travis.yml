@@ -8,11 +8,11 @@ cache: false
 
 # command to install dependencies
 install:
-  "pip install -r requirements.txt"
+  - pip install pyserial pyaudio
 
 # command to run tests
 script:
-  nosetests
+  - nosetests
 
 # Disable notifications
 notifications:
