@@ -1,5 +1,5 @@
 # Set main parameters
-sudo: true
+sudo: false
 language: python
 python: 2.7
 
@@ -7,12 +7,14 @@ python: 2.7
 cache: false
 
 # command to install dependencies of dependencies
-before_install:
-  - sudo apt-get install libasound-dev
+# before_install:
+#   - sudo apt-get install libasound-dev
 
 # command to install dependencies
 install:
-  - pip install setuptools pyserial pyaudio
+  - pip install setuptools
+  - pip install pyserial
+#  - pip install pyaudio
 
 # command to run tests
 script:
