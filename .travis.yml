@@ -1,5 +1,5 @@
 # Set main parameters
-sudo: false
+sudo: true
 language: python
 python: 2.7
 
