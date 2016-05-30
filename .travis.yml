@@ -8,7 +8,8 @@ cache: false
 
 # command to install dependencies
 install:
-  - pip install pyserial pyaudio
+  - apt-get install libasound-dev
+  - pip install setuptools pyserial pyaudio
 
 # command to run tests
 script:
