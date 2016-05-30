@@ -6,9 +6,12 @@ python: 2.7
 # Disable cache
 cache: false
 
+# command to install dependencies of dependencies
+before_install:
+  - sudo apt-get install libasound-dev
+
 # command to install dependencies
 install:
-  - apt-get install libasound-dev
   - pip install setuptools pyserial pyaudio
 
 # command to run tests
