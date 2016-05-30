@@ -6,13 +6,19 @@ python: 2.7
 # Disable cache
 cache: false
 
+# command to install dependencies of dependencies
+# before_install:
+#   - sudo apt-get install libasound-dev
+
 # command to install dependencies
 install:
-  - pip install pyserial pyaudio
+  - pip install setuptools
+  - pip install pyserial
+#  - pip install pyaudio
 
 # command to run tests
 script:
-  - nosetests
+  - nosetests -v ./tests/test_nose.py
 
 # Disable notifications
 notifications:

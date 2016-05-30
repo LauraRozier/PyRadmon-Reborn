@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{4ee3ffe8-ce7b-435d-9dbc-80b2b921b182}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>PyRadmon\PyRadmon.py</StartupFile>
+    <StartupFile>PyRadmon_No_Audio\PyRadmon.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -21,16 +21,18 @@
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="MultiPyRadmon - No Audio\MultiPyRadmon.py" />
+    <Compile Include="MultiPyRadmon_No_Audio\MultiPyRadmon.py" />
     <Compile Include="MultiPyRadmon\MultiPyRadmon.py" />
-    <Compile Include="PyRadmon - No Audio\PyRadmon.py" />
+    <Compile Include="PyRadmon_No_Audio\PyRadmon.py" />
     <Compile Include="PyRadmon\PyRadmon.py" />
+    <Compile Include="tests\test_nose.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="MultiPyRadmon" />
-    <Folder Include="MultiPyRadmon - No Audio" />
+    <Folder Include="MultiPyRadmon_No_Audio\" />
     <Folder Include="PyRadmon" />
-    <Folder Include="PyRadmon - No Audio" />
+    <Folder Include="PyRadmon_No_Audio\" />
+    <Folder Include="tests\" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="{2af0f10d-7135-4994-9156-5d01c9c11b7e}\2.7" />
