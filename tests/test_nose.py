@@ -4,7 +4,7 @@ To run tests : nosetests    test_nose.py
 Verobse (-v) : nosetests -v test_nose.py
 '''
 
-from PyRadmon_No_Audio.PyRadmon as PyRadmon
+import PyRadmon_No_Audio.PyRadmon as PyRadmon
 
 # create and read configuration data
 cfg = PyRadmon.config()
@@ -23,4 +23,4 @@ def test_cfg_portSpeed():
     assert cfg.portSpeed == 2400
 
 def test_cfg_protocol():
-    assert cfg.protocol == config.DEMO
+    assert cfg.protocol == PyRadmon.config.DEMO
