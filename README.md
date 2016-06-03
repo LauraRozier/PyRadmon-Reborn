@@ -58,11 +58,104 @@ To use PyRadmon Reborn on your Linux machine you would first have to follow the 
   - Unpack the tarball to the preferred location.  
     ```tar zxvf (Multi)PyRadmon.tar.gz -C ~/PyRadmon```
 
-### Getting PyRadmon Reborn to work
-[//]: # (TODO: Add getting started info here)
+### Running PyRadmon Reborn for the first time
+#### Windows
+- Run (Multi)PyRadmon.py once.
+  - Open command prompt
+    - Click on Start
+    - Type "cmd" in the search bar.
+    - Right click CMD.exe and left click "Run as Administrator"
+    - If you are asked for a confirmation, select "Yes" or "Ok"
+  - Change the directory to where you have downloaded (Multi)PyRadmon.py  
+    Eg: cd C:\Users\<Username>\Downloads
+  - Run (Multi)PyRadmon.py once to create the config file.
+    - ```python ./(Multi)PyRadmon.py``` *
+    - Close the command prompt.
+- Edit the config.txt file, this will be created in the same directory where you stored your (Multi)PyRadmon.py
+- Run (Multi)PyRadmon again, it will now start monitoring/uploading to Radmon.org using the configured settings.
+  - Open command prompt
+    - Click on Start
+    - Type "cmd" in the search bar.
+    - Right click CMD.exe and left click "Run as Administrator"
+    - If you are asked for a confirmation, select "Yes" or "Ok"
+  - Change the directory to where you have downloaded (Multi)PyRadmon.py  
+    Eg: cd C:\Users\<Username>\Downloads
+  - Run (Multi)PyRadmon.py.
+    - ```python ./(Multi)PyRadmon.py``` *
+
+\* = Might this give you an error, follow these steps: Python help on Windows
+
+#### \*bian/\*buntu
+- Run (Multi)PyRadmon.py once.
+  - In the command line type:
+    - ```cd ../Location/To/The/File```
+    - ```python ./(Multi)PyRadmon.py```
+  - In the GUI:
+    - Open the Terminal and type:
+      - ```cd ../Location/To/The/File```
+      - ```python ./(Multi)PyRadmon.py```
+- Edit the config.txt file, this will be created in the same directory where you stored your (Multi)PyRadmon.py
+  - ```nano config.txt```
+  - In nano you can exit with saving by pressing [Ctrl] and [X] simultaneously, then pressing [Y] to confirm.
+- Run (Multi)PyRadmon again, it will now start monitoring/uploading to Radmon.org using the configured settings.
+  - ```python ./(Multi)PyRadmon.py```
 
 ### Updating PyRadmon Reborn
-[//]: # (TODO: Add updating info here)
+#### Windows
+- Stop the program
+  - Press [Ctrl] and [C] simultaneously.
+  - Close the command prompt
+- Delete the old files and folder
+- Download (Multi)PyRadmon.py (Multi)PyRadmon.zip
+  - Download the preferred version in .zip format.
+  - Unpack the file to the preferred location.
+- Run (Multi)PyRadmon.py once.
+  - Open command prompt
+    - Click on Start
+    - Type "cmd" in the search bar.
+    - Right click CMD.exe and left click "Run as Administrator"
+    - If you are asked for a confirmation, select "Yes" or "Ok"
+  - Change the directory to where you have downloaded (Multi)PyRadmon.py  
+    Eg: cd C:\Users\<Username>\Downloads
+  - Run (Multi)PyRadmon.py once to create the config file.
+    - ```python ./(Multi)PyRadmon.py``` *
+    - Close the command prompt.
+- Edit the config.txt file, this will be created in the same directory where you stored your (Multi)PyRadmon.py
+- Run (Multi)PyRadmon again, it will now start monitoring/uploading to Radmon.org using the configured settings.
+  - Open command prompt
+    - Click on Start
+    - Type "cmd" in the search bar.
+    - Right click CMD.exe and left click "Run as Administrator"
+    - If you are asked for a confirmation, select "Yes" or "Ok"
+  - Change the directory to where you have downloaded (Multi)PyRadmon.py  
+    Eg: cd C:\Users\<Username>\Downloads
+  - Run (Multi)PyRadmon.py.
+    - ```python ./(Multi)PyRadmon.py``` *
+
+\* = Might this give you an error, follow these steps: Python help on Windows
+
+#### \*bian/\*buntu
+- Stop the program
+  - Press [Ctrl] and [C] simultaneously.
+- Delete the old files and folder
+  - ```cd ~```
+  - ```rm -rf PyRadmon```
+- Download (Multi)PyRadmon.py (If in GUI mode, first open the Terminal, NOT THE ROOT TERMINAL.)
+  - Download the preferred version in .tar.gz format.
+    - For MultiPyRadmon
+      - ```wget 'https://github.com/thibmo/PyRadmon-Reborn/releases/download/v1.2.0/MultiPyRadmon[.-.No.Audio].zip'```
+    - For PyRadmon
+      - ```wget 'https://github.com/thibmo/PyRadmon-Reborn/releases/download/v1.2.0/PyRadmon[.-.No.Audio].zip'```
+- Unpack the tarball to the preferred location.
+  - ```tar zxvf (Multi)PyRadmon.tar.gz -C ~/PyRadmon```
+- Run (Multi)PyRadmon.py once.
+  - ```cd ~/PyRadmon```
+  - ```python ./(Multi)PyRadmon.py```
+- Edit the config.txt file, this will be created in the same directory where you stored your (Multi)PyRadmon.py
+  - ```nano config.txt```
+  - In nano you can exit with saving by pressing [Ctrl] and [X] simultaneously, then pressing [Y] to confirm.
+- Run (Multi)PyRadmon again, it will now start monitoring/uploading to Radmon.org using the configured settings.
+  - ```python ./(Multi)PyRadmon.py```
 
 ### What script to use?
 [//]: # (Some explainatory text about the different scripts)
