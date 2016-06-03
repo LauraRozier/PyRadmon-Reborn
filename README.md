@@ -3,7 +3,6 @@
 [//]: # (Title and short description)
 PyRadmon, a Python radiation monitoring util to use on both Linux and Windows.
 
-[//]: (Installing stuff)
 ### Installation
 [//]: # (Installation requirements with links)
 The first thing you should know is whether you would like to use one, or two counters.  
@@ -57,8 +56,8 @@ To use PyRadmon Reborn on your Linux machine you would first have to follow the 
   - Unpack the tarball to the preferred location.  
     ```tar zxvf (Multi)PyRadmon.tar.gz -C ~/PyRadmon```
 
-[//]: (First run)
 ### Running PyRadmon Reborn for the first time
+[//]: # (First run information)
 #### Windows
 - Run (Multi)PyRadmon.py once.
   - Open command prompt
@@ -100,8 +99,8 @@ To use PyRadmon Reborn on your Linux machine you would first have to follow the 
 - Run (Multi)PyRadmon again, it will now start monitoring/uploading to Radmon.org using the configured settings.
   - ```python ./(Multi)PyRadmon.py```
 
-[//]: (Updating PyRadmon)
 ### Updating PyRadmon Reborn
+[//]: # (Updating information)
 #### Windows
 - Stop the program
   - Press [Ctrl] and [C] simultaneously.
