@@ -17,14 +17,20 @@ To use PyRadmon Reborn on your Windows machine you would first have to follow th
     the installer must create the edit to the system variables.
 - Install PIP (If it is not yet installed)
   - Test if PIP is installed.  
-    ```python -m pip list```
+    ```
+    python -m pip list
+    ```
   - If Python gave an error, you should [install PIP][PIPHelp].
 - Install PySerial
   - Install PySerial for Python 2.7 with it's default settings.  
-    ```python -m pip install pyserial```
+    ```
+    python -m pip install pyserial
+    ```
 - Install PyAudio
   - Install PyAudio for Python 2.7 with it's default settings.  
-    ```python -m pip install pyaudio```
+    ```
+    python -m pip install pyaudio
+    ```
 - Download (Multi)PyRadmon.py
   - [Download][PyRadmonDownload] the preferred version.
   - Put the file to the preferred location.
@@ -42,7 +48,34 @@ To use PyRadmon Reborn on your Linux machine you would first have to follow the 
   - reboot
   - [Log back in to the user you used before.]
   - cd ~
-  - sudo apt-get install libportaudio0 libportaudio2 libportaudiocpp0 portaudio19-dev
+  - Check your system architecture
+    ```
+    uname -p
+    ```
+  - If your architecture is x86_64 then install both amd64 and i386 packages.
+    For x86_64 you will need one extra step before installing the i386 package :
+    ```
+    sudo apt-get install libc6:i386 -y
+    ```
+  - Download the .deb file that fits your system from either the official repository : [Debian Portaudio Repo][DebianPortAudioRepo]
+    Or my mirror : [KP-Wiki Portaudio Repo][KPWikiPortAudioRepo]
+    - For ARM ( R-Pi 2 B+ ) this is ( Using Debian{/Ubuntu} repo ) :
+      ```
+      wget http://ftp.de.debian.org/debian/pool/main/p/portaudio/libportaudio0_18.1-7.1_armhf.deb
+      ```
+    - For 32-bit this is ( Using Debian{/Ubuntu} repo ) :
+      ```
+      wget http://ftp.de.debian.org/debian/pool/main/p/portaudio/libportaudio0_18.1-7.1_i386.deb
+      ```
+    - For 64-bit this is ( Using my repo ) :
+      ```
+      wget https://kp-wiki.org/freeware/portaudio/libportaudio0_18.1-7.1_amd64.deb
+      ```
+  - Install the package
+    ```
+    dpkg -i libportaudio0_18.1-7.1_[armhf, i386, amd64 - depending on the package you need to install].deb
+    ```
+  - sudo apt-get install libportaudio2 libportaudiocpp0 portaudio19-dev
   - sudo apt-get install git
   - sudo git clone [http://people.csail.mit.edu/hubert/git/pyaudio.git][GitPyAudio]
   - cd pyaudio
@@ -50,11 +83,17 @@ To use PyRadmon Reborn on your Linux machine you would first have to follow the 
 - Download (Multi)PyRadmon.py
   - [Download][PyRadmonDownload] the preferred version.
     - For MultiPyRadmon  
-      ```wget 'https://github.com/thibmo/PyRadmon-Reborn/releases/download/v1.2.0/MultiPyRadmon[.-.No.Audio].zip'```
+      ```
+      wget 'https://github.com/thibmo/PyRadmon-Reborn/releases/download/v1.2.0/MultiPyRadmon[.-.No.Audio].zip'
+      ```
     - For PyRadmon  
-      ```wget 'https://github.com/thibmo/PyRadmon-Reborn/releases/download/v1.2.0/PyRadmon[.-.No.Audio].zip'```
+      ```
+      wget 'https://github.com/thibmo/PyRadmon-Reborn/releases/download/v1.2.0/PyRadmon[.-.No.Audio].zip'
+      ```
   - Unpack the tarball to the preferred location.  
-    ```tar zxvf (Multi)PyRadmon.tar.gz -C ~/PyRadmon```
+    ```
+    tar zxvf (Multi)PyRadmon.tar.gz -C ~/PyRadmon
+    ```
 
 ### Running PyRadmon Reborn for the first time
 [//]: # (First run information)
@@ -68,7 +107,9 @@ To use PyRadmon Reborn on your Linux machine you would first have to follow the 
   - Change the directory to where you have downloaded (Multi)PyRadmon.py  
     Eg: cd C:\Users\<Username>\Downloads
   - Run (Multi)PyRadmon.py once to create the config file.
-    - ```python ./(Multi)PyRadmon.py``` *
+    - ```
+    python ./(Multi)PyRadmon.py
+    ``` *
     - Close the command prompt.
 - Edit the config.txt file, this will be created in the same directory where you stored your (Multi)PyRadmon.py
 - Run (Multi)PyRadmon again, it will now start monitoring/uploading to Radmon.org using the configured settings.
@@ -80,24 +121,38 @@ To use PyRadmon Reborn on your Linux machine you would first have to follow the 
   - Change the directory to where you have downloaded (Multi)PyRadmon.py  
     Eg: cd C:\Users\<Username>\Downloads
   - Run (Multi)PyRadmon.py.
-    - ```python ./(Multi)PyRadmon.py``` *
+    - ```
+    python ./(Multi)PyRadmon.py
+    ``` *
 
 \* = Might this give you an error, follow these steps: Python help on Windows
 
 #### \*bian/\*buntu
 - Run (Multi)PyRadmon.py once.
   - In the command line type:
-    - ```cd ../Location/To/The/File```
-    - ```python ./(Multi)PyRadmon.py```
+    - ```
+    cd ../Location/To/The/File
+    ```
+    - ```
+    python ./(Multi)PyRadmon.py
+    ```
   - In the GUI:
     - Open the Terminal and type:
-      - ```cd ../Location/To/The/File```
-      - ```python ./(Multi)PyRadmon.py```
+      - ```
+      cd ../Location/To/The/File
+      ```
+      - ``
+      `python ./(Multi)PyRadmon.py
+      ```
 - Edit the config.txt file, this will be created in the same directory where you stored your (Multi)PyRadmon.py
-  - ```nano config.txt```
+  - ```
+  nano config.txt
+  ```
   - In nano you can exit with saving by pressing [Ctrl] and [X] simultaneously, then pressing [Y] to confirm.
 - Run (Multi)PyRadmon again, it will now start monitoring/uploading to Radmon.org using the configured settings.
-  - ```python ./(Multi)PyRadmon.py```
+  - ```
+  python ./(Multi)PyRadmon.py
+  ```
 
 ### Updating PyRadmon Reborn
 [//]: # (Updating information)
@@ -118,7 +173,9 @@ To use PyRadmon Reborn on your Linux machine you would first have to follow the 
   - Change the directory to where you have downloaded (Multi)PyRadmon.py  
     Eg: cd C:\Users\<Username>\Downloads
   - Run (Multi)PyRadmon.py once to create the config file.
-    - ```python ./(Multi)PyRadmon.py``` *
+    - ```
+    python ./(Multi)PyRadmon.py
+    ``` *
     - Close the command prompt.
 - Edit the config.txt file, this will be created in the same directory where you stored your (Multi)PyRadmon.py
 - Run (Multi)PyRadmon again, it will now start monitoring/uploading to Radmon.org using the configured settings.
@@ -130,7 +187,9 @@ To use PyRadmon Reborn on your Linux machine you would first have to follow the 
   - Change the directory to where you have downloaded (Multi)PyRadmon.py  
     Eg: cd C:\Users\<Username>\Downloads
   - Run (Multi)PyRadmon.py.
-    - ```python ./(Multi)PyRadmon.py``` *
+    - ```
+    python ./(Multi)PyRadmon.py
+    ``` *
 
 \* = Might this give you an error, follow these steps: Python help on Windows
 
@@ -138,24 +197,42 @@ To use PyRadmon Reborn on your Linux machine you would first have to follow the 
 - Stop the program
   - Press [Ctrl] and [C] simultaneously.
 - Delete the old files and folder
-  - ```cd ~```
-  - ```rm -rf PyRadmon```
+  - ```
+  cd ~
+  ```
+  - ```
+  rm -rf PyRadmon
+  ```
 - Download (Multi)PyRadmon.py (If in GUI mode, first open the Terminal, NOT THE ROOT TERMINAL.)
   - Download the preferred version in .tar.gz format.
     - For MultiPyRadmon
-      - ```wget 'https://github.com/thibmo/PyRadmon-Reborn/releases/download/v1.2.0/MultiPyRadmon[.-.No.Audio].zip'```
+      - ```
+      wget 'https://github.com/thibmo/PyRadmon-Reborn/releases/download/v1.2.0/MultiPyRadmon[.-.No.Audio].zip'
+      ```
     - For PyRadmon
-      - ```wget 'https://github.com/thibmo/PyRadmon-Reborn/releases/download/v1.2.0/PyRadmon[.-.No.Audio].zip'```
+      - ```
+      wget 'https://github.com/thibmo/PyRadmon-Reborn/releases/download/v1.2.0/PyRadmon[.-.No.Audio].zip'
+      ```
 - Unpack the tarball to the preferred location.
-  - ```tar zxvf (Multi)PyRadmon.tar.gz -C ~/PyRadmon```
+  - ```
+  tar zxvf (Multi)PyRadmon.tar.gz -C ~/PyRadmon
+  ```
 - Run (Multi)PyRadmon.py once.
-  - ```cd ~/PyRadmon```
-  - ```python ./(Multi)PyRadmon.py```
+  - ```
+  cd ~/PyRadmon
+  ```
+  - ```
+  python ./(Multi)PyRadmon.py
+  ```
 - Edit the config.txt file, this will be created in the same directory where you stored your (Multi)PyRadmon.py
-  - ```nano config.txt```
+  - ```
+  nano config.txt
+  ```
   - In nano you can exit with saving by pressing [Ctrl] and [X] simultaneously, then pressing [Y] to confirm.
 - Run (Multi)PyRadmon again, it will now start monitoring/uploading to Radmon.org using the configured settings.
-  - ```python ./(Multi)PyRadmon.py```
+  - ```
+  python ./(Multi)PyRadmon.py
+  ```
 
 ### What script to use?
 [//]: # (Some explainatory text about the different scripts)
@@ -183,3 +260,5 @@ Below this text you will find a small guide to finding the script you will need.
   [PIPHelp]: <http://pip.readthedocs.io/en/stable/installing>
   [GitPyAudio]: <http://people.csail.mit.edu/hubert/git/pyaudio.git>
   [PyRadmonDownload]: <https://github.com/thibmo/PyRadmon-Reborn/releases>
+  [DebianPortAudioRepo]: <http://ftp.de.debian.org/debian/pool/main/p/portaudio>
+  [KPWikiPortAudioRepo]: <https://kp-wiki.org/freeware/portaudio>
