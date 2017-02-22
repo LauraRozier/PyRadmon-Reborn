@@ -57,7 +57,7 @@ To use PyRadmon Reborn on your Linux machine you would first have to follow the 
     ```
     sudo apt-get install libc6:i386 -y
     ```
-  - Download the .deb file that fits your system from either the official repository : [Debian Portaudio Repo](http://ftp.de.debian.org/debian/pool/main/p/portaudio)
+  - Download the .deb file that fits your system from either the official repository : [Debian Portaudio Repo](http://ftp.de.debian.org/debian/pool/main/p/portaudio)  
     Or my mirror : [KP-Wiki Portaudio Repo](https://kp-wiki.org/freeware/portaudio)
     - For ARM ( R-Pi 2 B+ ) this is ( Using Debian{/Ubuntu} repo ) :  
       ```
