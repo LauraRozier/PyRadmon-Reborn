@@ -60,6 +60,7 @@ MSG_FMT_SYS_EXIT = "%s:\n%s";
 MSG_FMT_EXCEPTION = "Unhandled exception:\n%s";
 MSG_FMT_SERIAL_EXCEPTION = "Problem with serial port:\n%s\nExiting";
 MSG_FMT_NEW_DATA = 'Received a new CPM value from the device: %s';
+MSG_FMT_GETDATA_ERROR = "Problem in getData procedure (disconnected USB device?):\n%s\nExiting";
 MSG_INCORRECT_CREDENTIALS = 'You are using incorrect user/password combination!';
 MSG_WAIT_FOR_THREAD = 'Waiting a second for the device thread to catch up, then kill it';
 MSG_QUEUE_LOCKED = 'Result queue is locked, retrying in 0.1 second';
@@ -384,6 +385,7 @@ class BaseDevice(threading.Thread):
     def sendResult(self):
         while len(self.queue) <= 0: # Wait until we have data in the queue
             time.sleep(0.1);
+        # End while
             
 
         # Check if it's safe to process queue
@@ -406,9 +408,6 @@ class BaseDevice(threading.Thread):
         self.queueLocked = False;
         self.webWorker.sendSample(SampleData(cpm, datetime.datetime.utcnow()));
 
-    def getData(self):
-        return;
-
 class DemoDevice(BaseDevice):
     def __init__(self, threadId: int, cfg: Config):
         super().__init__('DemoDevice', threadId, cfg);
@@ -417,7 +416,15 @@ class DemoDevice(BaseDevice):
         super().run();
 
         while not self.terminated:
-            cpm = self.getData();
+            for i in range(0, 50):
+                time.sleep(0.1);
+
+                if self.terminated:
+                    break;
+                # End if
+            # End for
+
+            cpm = random.randint(5, 40);
 
             while self.queueLocked:
                 gLogger.debug(MSG_QUEUE_LOCKED);
@@ -430,17 +437,6 @@ class DemoDevice(BaseDevice):
             print(MSG_FMT_NEW_DATA % (cpm));
             gLogger.info(MSG_FMT_NEW_DATA, cpm);
         # End while
-
-    def getData(self):
-        for i in range(0, 50):
-            time.sleep(0.1);
-
-            if self.terminated:
-                return;
-            # End if
-        # End for
-
-        return random.randint(5, 40);
 
 if PYSERIAL_SUPPORT:
     class SerialDevice(BaseDevice):
@@ -476,8 +472,6 @@ if PYSERIAL_SUPPORT:
             except serial.SerialException as e:
                 print(MSG_FMT_SERIAL_EXCEPTION % (str(e)));
                 gLogger.exception(MSG_FMT_SERIAL_EXCEPTION, str(e));
-                self.stop();
-                time.sleep(1);
                 sys.exit(1);
             # End try
 
@@ -509,6 +503,9 @@ if PYSERIAL_SUPPORT:
 
             return response;
 
+        def getData(self):
+            return;
+
     class MyGeigerDevice(SerialDevice):
         def __init__(self, threadId: int, cfg: Config):
             super().__init__('MyGeigerDevice', threadId, cfg);
@@ -527,8 +524,39 @@ if PYSERIAL_SUPPORT:
         def __init__(self, threadId: int, cfg: Config):
             super().__init__('NetIODevice', threadId, cfg);
 
-        def run(self):
-            super().run();
+        def getData(self):
+            try:
+                x = '';
+
+                # We want data only once per 30 seconds, ignore rest it's averaged for 60 seconds by device anyway
+                # for i in range(0, 299):
+                #     time.sleep(0.01);
+                # End for
+
+                # Read all available data do not stop receiving unless it ends with \r\n
+                while ((not x.endswith("\r\n")) and (not self.terminated)):
+                    while ((self.serialPort.inWaiting() > 0) and (not self.terminated)):
+                        x += self.serialPort.read();
+                    # End while
+                # End while
+
+                # If CTRL+C pressed then x can be invalid so check it
+                if x.endswith("\r\n"):
+                    # We want only latest data, ignore older
+                    tmp = x.splitlines();
+                    x = tmp[len(tmp) - 1];
+                    return int(x);
+                # End if
+
+            except Exception as e:
+                print(MSG_FMT_GETDATA_ERROR % (str(e)));
+                gLogger.exception(MSG_FMT_GETDATA_ERROR, str(e));
+                sys.exit(1);
+            # End try
+
+        def initCommunication(self):
+            # Send "go" to start receiving CPM data
+            response = self.sendCommand("go\r\n");
 # End if
 
 if SOUNDCARD_SUPPORT:

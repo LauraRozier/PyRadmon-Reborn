@@ -20,23 +20,14 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="_OLD\MultiPyRadmon_No_Audio\MultiPyRadmon.py" />
-    <None Include="_OLD\MultiPyRadmon\MultiPyRadmon.py" />
-    <None Include="_OLD\PyRadmon_No_Audio\PyRadmon.py" />
-    <None Include="_OLD\PyRadmon\PyRadmon.py" />
+    <None Include="_OLD\__OLD__PyRadmon.py" />
     <Compile Include="PyRadmon\pyradmon.py">
       <SubType>Code</SubType>
     </Compile>
-    <None Include="_OLD\tests\test_nose.py" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="_OLD\MultiPyRadmon\" />
-    <Folder Include="_OLD\MultiPyRadmon_No_Audio\" />
     <Folder Include="_OLD\" />
     <Folder Include="PyRadmon\" />
-    <Folder Include="_OLD\PyRadmon\" />
-    <Folder Include="_OLD\PyRadmon_No_Audio\" />
-    <Folder Include="_OLD\tests\" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|3.6" />
