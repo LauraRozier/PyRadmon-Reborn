@@ -195,7 +195,7 @@ class Config():
 
         print(MSG_NEW_CONFIG);
         gLogger.info(MSG_NEW_CONFIG);
-       
+
         try:
             protocols = ['DEMO'];
 
@@ -327,7 +327,7 @@ class WebWorker():
 
     def __init__(self, cfg: Config):
         """Initializer
-            
+
         Parameters
         ----------
         cfg : Config
@@ -339,7 +339,7 @@ class WebWorker():
 
     def sendSample(self, sample: SampleData):
         """Send the sample to Radmon
-            
+
         Parameters
         ----------
         sample : pyradmon.SampleData
@@ -420,7 +420,7 @@ class BaseDevice(threading.Thread):
 
     def __init__(self, deviceName: str, threadId: int, cfg: Config):
         """Device thread initializer
-            
+
         Parameters
         ----------
         deviceName : str
@@ -460,7 +460,6 @@ class BaseDevice(threading.Thread):
         while len(self.queue) <= 0: # Wait until we have data in the queue
             time.sleep(0.1);
         # End while
-            
 
         # Check if it's safe to process queue
         while self.queueLocked:
@@ -512,7 +511,7 @@ class DemoDevice(BaseDevice):
 
     def __init__(self, threadId: int, cfg: Config):
         """Device thread initializer
-            
+
         Parameters
         ----------
         threadId : int
@@ -599,7 +598,7 @@ if PYSERIAL_SUPPORT:
 
         def __init__(self, deviceName: str, threadId: int, cfg: Config):
             """Device thread initializer
-            
+
             Parameters
             ----------
             deviceName : str
@@ -653,7 +652,7 @@ if PYSERIAL_SUPPORT:
 
         def sendCommand(self, command: str):
             """Send a command to the serial port
-            
+
             Parameters
             ----------
             command : str
@@ -729,7 +728,7 @@ if PYSERIAL_SUPPORT:
 
         def __init__(self, threadId: int, cfg: Config):
             """Device thread initializer
-            
+
             Parameters
             ----------
             threadId : int
@@ -813,7 +812,7 @@ if PYSERIAL_SUPPORT:
 
         def __init__(self, threadId: int, cfg: Config):
             """Device thread initializer
-            
+
             Parameters
             ----------
             threadId : int
@@ -823,7 +822,7 @@ if PYSERIAL_SUPPORT:
             """
 
             super().__init__('GMCDevice', threadId, cfg);
-            
+
         def getData(self):
             """Get data from the serial device
 
@@ -916,7 +915,7 @@ if PYSERIAL_SUPPORT:
 
         def __init__(self, threadId: int, cfg: Config):
             """Device thread initializer
-            
+
             Parameters
             ----------
             threadId : int
@@ -1027,7 +1026,7 @@ if SOUNDCARD_SUPPORT:
 
         def __init__(self, threadId: int, cfg: Config):
             """Device thread initializer
-            
+
             Parameters
             ----------
             threadId : int
@@ -1179,7 +1178,7 @@ def main():
 
     Just creates the main application object and starts running the app
     """
-    
+
     app = PyRadmon();
 
     try:
