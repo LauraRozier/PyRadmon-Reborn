@@ -37,9 +37,9 @@ except ImportError:
 # Module information
 #
 __author__ = 'Thimo Braker';
-__status__ = 'development';
-__version__ = '2.0.0';
-__date__ = '2019-01-22';
+__status__ = 'staging';
+__version__ = '2.0.1';
+__date__ = '2019-01-25';
 __license__ = 'BEERWARE';
 
 # =====================================================================================================================
@@ -368,7 +368,7 @@ class WebWorker():
                 }
             );
             res = conn.getresponse();
-            data = res.read().decode('utf-8');
+            data = res.read().decode('UTF-8', 'ignore');
             gLogger.debug("Server response:\n%s", data);
 
             for line in data.replace('\r', '').split("\n"):
@@ -660,7 +660,7 @@ if PYSERIAL_SUPPORT:
 
             Returns
             -------
-            str
+            bytes
                 The result of the command
             """
 
@@ -670,7 +670,7 @@ if PYSERIAL_SUPPORT:
             response = '';
 
             while (self.serialPort.inWaiting() > 0) and (not self.terminated):
-                response += self.serialPort.read();
+                response += self.serialPort.read().decode('UTF-8', 'ignore');
             # End while
 
             return response;
@@ -753,10 +753,11 @@ if PYSERIAL_SUPPORT:
                     time.sleep(0.01);
                 # End while
 
+                time.sleep(0.5);
                 x = '';
 
                 while ((self.serialPort.inWaiting() > 0) and (not self.terminated)):
-                    x += self.serialPort.read(); # Read all available data
+                    x += self.serialPort.read().decode('UTF-8', 'ignore'); # Read all available data
                 # End while
 
                 if len(x) > 0:
@@ -767,8 +768,6 @@ if PYSERIAL_SUPPORT:
                 gLogger.exception(MSG_FMT_GETDATA_ERROR, str(e));
                 sys.exit(1);
             # End try
-
-            return 0;
 
     class GMCDevice(SerialDevice):
         """GMC device protocol thread
@@ -946,7 +945,7 @@ if PYSERIAL_SUPPORT:
                 # Read all available data do not stop receiving unless it ends with \r\n
                 while ((not x.endswith("\r\n")) and (not self.terminated)):
                     while ((self.serialPort.inWaiting() > 0) and (not self.terminated)):
-                        x += self.serialPort.read();
+                        x += self.serialPort.read().decode('UTF-8', 'ignore');
                     # End while
                 # End while
 
@@ -967,7 +966,7 @@ if PYSERIAL_SUPPORT:
             """Initialize the serial port communication
             """
 
-            response = self.sendCommand("go\r\n"); # Send "go" to start receiving CPM data
+            self.sendCommand("go\r\n"); # Send "go" to start receiving CPM data
 # End if
 
 if SOUNDCARD_SUPPORT:
