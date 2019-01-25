@@ -61,11 +61,15 @@ MSG_FMT_EXCEPTION = "Unhandled exception:\n%s";
 MSG_FMT_SERIAL_EXCEPTION = "Problem with serial port:\n%s\nExiting";
 MSG_FMT_NEW_DATA = 'Received a new CPM value from the device: %s';
 MSG_FMT_GETDATA_ERROR = "Problem in getData procedure (disconnected USB device?):\n%s\nExiting";
+MSG_FMT_GMC_FOUND = 'Found GMC-compatible device, version: %s';
+MSG_FMT_GMC_UNIT_TIME = 'Unit shows time as: %s';
 MSG_INCORRECT_CREDENTIALS = 'You are using incorrect user/password combination!';
 MSG_WAIT_FOR_THREAD = 'Waiting a second for the device thread to catch up, then kill it';
 MSG_QUEUE_LOCKED = 'Result queue is locked, retrying in 0.1 second';
 MSG_CTRL_C_EXIT = 'CTRL+C pressed, exiting program';
 MSG_SYS_EXIT = 'System exit';
+MSG_DEVICE_NOT_FOUND = "No response from device\nExiting";
+MSG_GMC_DEVICE_NO_COMPAT = 'Unknown response to CPM request, device is not GMC-compatible?';
 RADMON_URL_FMT = '/radmon.php?user=%s&password=%s&function=submit&datetime=%s&value=%s&unit=CPM';
 
 # =====================================================================================================================
@@ -305,6 +309,10 @@ class WebWorker():
         The hostname of the server we need to communicate with
     PORT : int
         The TCP port to communicate with
+    username : str
+        The username used to authenticate with Radmon
+    password : str
+        The password used to authenticate with Radmon
 
     Methods
     -------
@@ -318,10 +326,26 @@ class WebWorker():
     PORT = 443;
 
     def __init__(self, cfg: Config):
+        """Initializer
+            
+        Parameters
+        ----------
+        cfg : Config
+            The web communication configuration
+        """
+
         self.username = cfg.username;
         self.password = cfg.password;
 
     def sendSample(self, sample: SampleData):
+        """Send the sample to Radmon
+            
+        Parameters
+        ----------
+        sample : pyradmon.SampleData
+            The data sample to submit to radmon
+        """
+
         if (self.username == '') or (self.password == ''):
             return;
         # End if
@@ -362,10 +386,51 @@ class WebWorker():
         # End try
 
 class BaseDevice(threading.Thread):
+    """Base (Abstract) device thread
+
+    Should not be instanciated directly, only create an instance of one of it's derivatives
+
+    Attributes
+    ----------
+    terminated : bool
+        The configuration file (default False)
+    queueLocked : bool
+        The log level (default False)
+    deviceName : str
+        The name of this device
+    webWorker : pyradmin.WebWorker
+        The webworker for this thread, each thread gets it's own, so they can't interfere with each other
+    queue : deque
+        The CPM sample queue
+
+    Methods
+    -------
+    __init__(deviceName: str, threadId: int, cfg: Config)
+        Device thread initializer
+    run()
+        Start running the device thread
+    stop()
+        Stop the device thread
+    sendResult()
+        Send the result to Radmon
+    """
+
     terminated = False;
     queueLocked = False;
 
     def __init__(self, deviceName: str, threadId: int, cfg: Config):
+        """Device thread initializer
+            
+        Parameters
+        ----------
+        deviceName : str
+            The device name
+        threadId : int
+            The thread ID
+        cfg : Config
+            The device configuration
+        """
+
         threading.Thread.__init__(self);
         self.deviceName = deviceName;
         self.name = '%s_thread%s' % (deviceName, threadId);
@@ -375,14 +440,23 @@ class BaseDevice(threading.Thread):
         self.queue = deque();
 
     def run(self):
+        """Start running the device thread
+        """
+
         print(MSG_FMT_DATA_STARTED % (self.name));
         gLogger.info(MSG_FMT_DATA_STARTED, self.name);
 
     def stop(self):
+        """Stop the device thread
+        """
+
         self.terminated = True;
         self.queueLocked = False;
 
     def sendResult(self):
+        """Send the result to Radmon
+        """
+
         while len(self.queue) <= 0: # Wait until we have data in the queue
             time.sleep(0.1);
         # End while
@@ -399,9 +473,9 @@ class BaseDevice(threading.Thread):
         self.queueLocked = True;
         cpm = 0;
 
-        # Now get sum of all CPM's
-        for singleData in self.queue:
+        for singleData in self.queue: # Now get sum of all CPM's
             cpm += singleData;
+        # End for
 
         cpm = int(float(cpm) / len(self.queue));
         self.queue.clear();
@@ -409,10 +483,50 @@ class BaseDevice(threading.Thread):
         self.webWorker.sendSample(SampleData(cpm, datetime.datetime.utcnow()));
 
 class DemoDevice(BaseDevice):
+    """Demo device protocol thread
+
+    Attributes
+    ----------
+    terminated : bool
+        The configuration file (default False)
+    queueLocked : bool
+        The log level (default False)
+    deviceName : str
+        The name of this device
+    webWorker : pyradmin.WebWorker
+        The webworker for this thread, each thread gets it's own, so they can't interfere with each other
+    queue : deque
+        The CPM sample queue
+
+    Methods
+    -------
+    __init__(deviceName: str, threadId: int, cfg: Config)
+        Device thread initializer
+    run()
+        Start running the device thread
+    stop()
+        Stop the device thread
+    sendResult()
+        Send the result to Radmon
+    """
+
     def __init__(self, threadId: int, cfg: Config):
+        """Device thread initializer
+            
+        Parameters
+        ----------
+        threadId : int
+            The thread ID
+        cfg : Config
+            The device configuration
+        """
+
         super().__init__('DemoDevice', threadId, cfg);
 
     def run(self):
+        """Start running the device thread
+        """
+
         super().run();
 
         while not self.terminated:
@@ -440,14 +554,70 @@ class DemoDevice(BaseDevice):
 
 if PYSERIAL_SUPPORT:
     class SerialDevice(BaseDevice):
+        """Base (Abstract) serial device thread
+
+        Should not be instanciated directly, only create an instance of one of it's derivatives
+
+        Attributes
+        ----------
+        terminated : bool
+            The configuration file (default False)
+        queueLocked : bool
+            The log level (default False)
+        serialPort : serial.Serial
+            The serial port to use for communication
+        deviceName : str
+            The name of this device
+        webWorker : pyradmin.WebWorker
+            The webworker for this thread, each thread gets it's own, so they can't interfere with each other
+        queue : deque
+            The CPM sample queue
+        portName : str
+            The name or path of the serial device port
+        portSpeed : int
+            The baud rate used for communication on the serial bus
+
+        Methods
+        -------
+        __init__(deviceName: str, threadId: int, cfg: Config)
+            Device thread initializer
+        run()
+            Start running the device thread
+        stop()
+            Stop the device thread
+        initCommunication()
+            Initialize the serial port communication
+        sendCommand(command: str)
+            Send a command to the serial port
+        getData()
+            Get data from the serial device
+        sendResult()
+            Send the result to Radmon
+        """
+
         serialPort = None;
 
         def __init__(self, deviceName: str, threadId: int, cfg: Config):
+            """Device thread initializer
+            
+            Parameters
+            ----------
+            deviceName : str
+                The device name
+            threadId : int
+                The thread ID
+            cfg : Config
+                The device configuration
+            """
+
             super().__init__(deviceName, threadId, cfg);
             self.portName = cfg.portName;
             self.portSpeed = cfg.portSpeed;
 
         def run(self):
+            """Start running the device thread
+            """
+
             super().run();
 
             try:
@@ -476,6 +646,9 @@ if PYSERIAL_SUPPORT:
             # End try
 
         def initCommunication(self):
+            """Initialize the serial port communication
+            """
+
             return;
 
         def sendCommand(self, command: str):
@@ -504,34 +677,272 @@ if PYSERIAL_SUPPORT:
             return response;
 
         def getData(self):
+            """Get data from the serial device
+
+            Returns
+            -------
+            int
+                The CPM result
+            """
+
             return;
 
     class MyGeigerDevice(SerialDevice):
+        """MyGeiger device protocol thread
+
+        Attributes
+        ----------
+        terminated : bool
+            The configuration file (default False)
+        queueLocked : bool
+            The log level (default False)
+        serialPort : serial.Serial
+            The serial port to use for communication
+        deviceName : str
+            The name of this device
+        webWorker : pyradmin.WebWorker
+            The webworker for this thread, each thread gets it's own, so they can't interfere with each other
+        queue : deque
+            The CPM sample queue
+        portName : str
+            The name or path of the serial device port
+        portSpeed : int
+            The baud rate used for communication on the serial bus
+
+        Methods
+        -------
+        __init__(deviceName: str, threadId: int, cfg: Config)
+            Device thread initializer
+        run()
+            Start running the device thread
+        stop()
+            Stop the device thread
+        initCommunication()
+            Initialize the serial port communication
+        sendCommand(command: str)
+            Send a command to the serial port
+        getData()
+            Get data from the serial device
+        sendResult()
+            Send the result to Radmon
+        """
+
         def __init__(self, threadId: int, cfg: Config):
+            """Device thread initializer
+            
+            Parameters
+            ----------
+            threadId : int
+                The thread ID
+            cfg : Config
+                The device configuration
+            """
+
             super().__init__('MyGeigerDevice', threadId, cfg);
 
-        def run(self):
-            super().run();
+        def getData(self):
+            """Get data from the serial device
+
+            Returns
+            -------
+            int
+                The CPM result
+            """
+
+            try:
+                while ((self.serialPort.inWaiting() == 0) and (not self.terminated)): # Wait for data
+                    time.sleep(0.01);
+                # End while
+
+                x = '';
+
+                while ((self.serialPort.inWaiting() > 0) and (not self.terminated)):
+                    x += self.serialPort.read(); # Read all available data
+                # End while
+
+                if len(x) > 0:
+                    return int(x);
+                # End if
+            except Exception as e:
+                print(MSG_FMT_GETDATA_ERROR % (str(e)));
+                gLogger.exception(MSG_FMT_GETDATA_ERROR, str(e));
+                sys.exit(1);
+            # End try
+
+            return 0;
 
     class GMCDevice(SerialDevice):
-        def __init__(self, threadId: int, cfg: Config):
-            super().__init__('GMCDevice', threadId, cfg);
+        """GMC device protocol thread
 
-        def run(self):
-            super().run();
+        Attributes
+        ----------
+        terminated : bool
+            The configuration file (default False)
+        queueLocked : bool
+            The log level (default False)
+        serialPort : serial.Serial
+            The serial port to use for communication
+        deviceName : str
+            The name of this device
+        webWorker : pyradmin.WebWorker
+            The webworker for this thread, each thread gets it's own, so they can't interfere with each other
+        queue : deque
+            The CPM sample queue
+        portName : str
+            The name or path of the serial device port
+        portSpeed : int
+            The baud rate used for communication on the serial bus
+
+        Methods
+        -------
+        __init__(deviceName: str, threadId: int, cfg: Config)
+            Device thread initializer
+        run()
+            Start running the device thread
+        stop()
+            Stop the device thread
+        initCommunication()
+            Initialize the serial port communication
+        sendCommand(command: str)
+            Send a command to the serial port
+        getData()
+            Get data from the serial device
+        sendResult()
+            Send the result to Radmon
+        """
+
+        def __init__(self, threadId: int, cfg: Config):
+            """Device thread initializer
+            
+            Parameters
+            ----------
+            threadId : int
+                The thread ID
+            cfg : Config
+                The device configuration
+            """
+
+            super().__init__('GMCDevice', threadId, cfg);
+            
+        def getData(self):
+            """Get data from the serial device
+
+            Returns
+            -------
+            int
+                The CPM result
+            """
+
+            try:
+                for i in range(0, 100): # Wait, we want sample every 10s
+                    time.sleep(0.1);
+                # End for
+
+                response = self.sendCommand('<GETCPM>>'); # Send request
+
+                if len(response) == 2:
+                    return ord(response[0]) * 256 + ord(response[1]); # Convert bytes to 16 bit int
+                else:
+                    print(MSG_GMC_DEVICE_NO_COMPAT);
+                    logger.error(MSG_GMC_DEVICE_NO_COMPAT);
+                    sys.exit(1);
+                # End if
+            except Exception as e:
+                print(MSG_FMT_GETDATA_ERROR % (str(e)));
+                gLogger.exception(MSG_FMT_GETDATA_ERROR, str(e));
+                sys.exit(1);
+            # End try
+
+        def initCommunication(self):
+            """Initialize the serial port communication
+            """
+
+            response = self.sendCommand('<GETVER>>'); # Get firmware version
+
+            if len(response) > 0:
+                print(MSG_FMT_GMC_FOUND % (response));
+                gLogger.info(MSG_FMT_GMC_FOUND, response);
+                self.sendCommand('<HEARTBEAT0>>'); # Disable heartbeat, we will request data ourselves
+                unitTime = self.sendCommand('<GETDATETIME>>'); # Get unit time
+                print(MSG_FMT_GMC_UNIT_TIME % (unitTime));
+                gLogger.info(MSG_FMT_GMC_UNIT_TIME, unitTime);
+                # Set unit time to UTC
+                self.sendCommand('<SETDATETIME[%s]>>' % (datetime.datetime.utcnow().strftime('%y%m%d%H%M%S')));
+            else:
+                print(MSG_DEVICE_NOT_FOUND);
+                gLogger.error(MSG_DEVICE_NOT_FOUND);
+                sys.exit(1);
+            # End if
 
     class NetIODevice(SerialDevice):
+        """NetIO device protocol thread
+
+        Attributes
+        ----------
+        terminated : bool
+            The configuration file (default False)
+        queueLocked : bool
+            The log level (default False)
+        serialPort : serial.Serial
+            The serial port to use for communication
+        deviceName : str
+            The name of this device
+        webWorker : pyradmin.WebWorker
+            The webworker for this thread, each thread gets it's own, so they can't interfere with each other
+        queue : deque
+            The CPM sample queue
+        portName : str
+            The name or path of the serial device port
+        portSpeed : int
+            The baud rate used for communication on the serial bus
+
+        Methods
+        -------
+        __init__(deviceName: str, threadId: int, cfg: Config)
+            Device thread initializer
+        run()
+            Start running the device thread
+        stop()
+            Stop the device thread
+        initCommunication()
+            Initialize the serial port communication
+        sendCommand(command: str)
+            Send a command to the serial port
+        getData()
+            Get data from the serial device
+        sendResult()
+            Send the result to Radmon
+        """
+
         def __init__(self, threadId: int, cfg: Config):
+            """Device thread initializer
+            
+            Parameters
+            ----------
+            threadId : int
+                The thread ID
+            cfg : Config
+                The device configuration
+            """
+
             super().__init__('NetIODevice', threadId, cfg);
 
         def getData(self):
-            try:
-                x = '';
+            """Get data from the serial device
 
-                # We want data only once per 30 seconds, ignore rest it's averaged for 60 seconds by device anyway
-                # for i in range(0, 299):
-                #     time.sleep(0.01);
+            Returns
+            -------
+            int
+                The CPM result
+            """
+
+            try:
+                # We want data only once per 10 seconds, ignore rest it's averaged for 60 seconds by device anyway
+                for i in range(0, 100):
+                    time.sleep(0.01);
                 # End for
+
+                x = '';
 
                 # Read all available data do not stop receiving unless it ends with \r\n
                 while ((not x.endswith("\r\n")) and (not self.terminated)):
@@ -547,7 +958,6 @@ if PYSERIAL_SUPPORT:
                     x = tmp[len(tmp) - 1];
                     return int(x);
                 # End if
-
             except Exception as e:
                 print(MSG_FMT_GETDATA_ERROR % (str(e)));
                 gLogger.exception(MSG_FMT_GETDATA_ERROR, str(e));
@@ -555,25 +965,85 @@ if PYSERIAL_SUPPORT:
             # End try
 
         def initCommunication(self):
-            # Send "go" to start receiving CPM data
-            response = self.sendCommand("go\r\n");
+            """Initialize the serial port communication
+            """
+
+            response = self.sendCommand("go\r\n"); # Send "go" to start receiving CPM data
 # End if
 
 if SOUNDCARD_SUPPORT:
     class AudioDevice(BaseDevice):
+        """MyGeiger device protocol thread
+
+        Attributes
+        ----------
+        terminated : bool
+            The configuration file (default False)
+        queueLocked : bool
+            The log level (default False)
+        noisyCount : int
+            The count of noisy audio blocks
+        noisyBlock : int
+            The count of noisy audio blocks
+        sampleRate : int
+            The sample rate (frames per second) to use for audio recording (default 44100)
+        blocksPerSecond : int
+            The amount of blocks we want to grab per second (default 100)
+        deviceName : str
+            The name of this device
+        webWorker : pyradmin.WebWorker
+            The webworker for this thread, each thread gets it's own, so they can't interfere with each other
+        queue : deque
+            The CPM sample queue
+        device : soundcard._Microphone
+            The count of noisy audio blocks
+        threshold : int
+            The RMS threshold, determines if a block is "noisy" or not
+        frameCount : int
+            The amount on frames that are captured per audio block (default ((sampleRate / blocksPerSecond) * 1))
+
+        Methods
+        -------
+        __init__(deviceName: str, threadId: int, cfg: Config)
+            Device thread initializer
+        run()
+            Start running the device thread
+        stop()
+            Stop the device thread
+        initCommunication()
+            Initialize the serial port communication
+        sendCommand(command: str)
+            Send a command to the serial port
+        getData()
+            Get data from the serial device
+        sendResult()
+            Send the result to Radmon
+        """
+
         noisyCount = 0;
         noisyBlock = False;
-        loopCounter = 0;
         sampleRate = 44100;
         blocksPerSecond = 100;
-        frameCount = int((sampleRate / blocksPerSecond) * 1);
 
         def __init__(self, threadId: int, cfg: Config):
+            """Device thread initializer
+            
+            Parameters
+            ----------
+            threadId : int
+                The thread ID
+            cfg : Config
+                The device configuration
+            """
             super().__init__('AudioDevice', threadId, cfg);
             self.device = soundcard.get_microphone(cfg.audioDevice);
             self.threshold = cfg.audioThreshold;
+            self.frameCount = int((sampleRate / blocksPerSecond) * 1);
 
         def run(self):
+            """Start running the device thread
+            """
+
             super().run();
 
             with self.device.recorder(self.sampleRate) as mic:
@@ -603,6 +1073,9 @@ if SOUNDCARD_SUPPORT:
             # End with
 
         def sendResult(self):
+            """Send the result to Radmon
+            """
+
             while self.queueLocked:
                 gLogger.debug(MSG_QUEUE_LOCKED);
                 time.sleep(0.01);
@@ -629,9 +1102,14 @@ class PyRadmon():
     terminated = False;
 
     def __init__(self):
+        """Initialize the app instance
+        """
         self.cfg = Config();
 
     def run(self):
+        """Run the main application thread in a loop, send data to Radmon every 30 seconds
+        """
+
         if not self.cfg.fileExists():
             self.cfg.createDefault();
             sys.exit(0);
@@ -651,6 +1129,7 @@ class PyRadmon():
             device = AudioDevice(++self.threadCounter, self.cfg);
         else:
             device = DemoDevice(++self.threadCounter, self.cfg);
+        # End if
 
         gLogger.debug(MSG_FMT_PROTOCOL, device.deviceName);
         device.start();
@@ -673,17 +1152,20 @@ class PyRadmon():
         # End while
 
     def stop(self):
+        """Stop the app and kill it's child threads
+        """
+
         self.terminated = True;
-        print(MSG_WAIT_FOR_THREAD);
-        gLogger.warning(MSG_WAIT_FOR_THREAD);
-        time.sleep(1); # Give everything some time to shut down
 
         for thread in self.threads:
-            print(MSG_FMT_STOPPING_THREAD % (thread.getName()));
-            gLogger.info(MSG_FMT_STOPPING_THREAD, thread.getName());
-            thread.stop();
-            time.sleep(1);
-            thread.join();
+            if ((not thread.terminated) and thread.is_alive()):
+                print(MSG_FMT_STOPPING_THREAD % (thread.getName()));
+                gLogger.info(MSG_FMT_STOPPING_THREAD, thread.getName());
+                thread.stop();
+                print(MSG_WAIT_FOR_THREAD);
+                gLogger.warning(MSG_WAIT_FOR_THREAD);
+                time.sleep(1);
+                thread.join();
         # End for
 
         print(MSG_SHUTDOWN);
@@ -712,6 +1194,7 @@ def main():
         else:
             print(MSG_SYS_EXIT);
             gLogger.info(MSG_SYS_EXIT);
+        # End if
     except Exception as e:
         print(MSG_FMT_EXCEPTION % (str(e)));
         gLogger.error(MSG_FMT_EXCEPTION, str(e));
