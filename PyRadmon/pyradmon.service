@@ -1,0 +1,10 @@
+[Unit]
+Description=Python script for DIY geiger counters to upload measurements to Radmon
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/env python3 /var/pyradmon/pyradmon.py
+
+[Install]
+WantedBy=multi-user.target
