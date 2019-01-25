@@ -1187,7 +1187,7 @@ def main():
         print(MSG_CTRL_C_EXIT);
         gLogger.info(MSG_CTRL_C_EXIT);
     except SystemExit as e:
-        if e.code() != 0:
+        if e.code != 0:
             print(MSG_FMT_SYS_EXIT % (MSG_SYS_EXIT, str(e)));
             gLogger.warning(MSG_FMT_SYS_EXIT, MSG_SYS_EXIT, str(e));
         else:

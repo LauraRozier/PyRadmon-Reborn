@@ -5,6 +5,7 @@ After=multi-user.target
 [Service]
 Type=idle
 ExecStart=/usr/bin/env python3 /var/pyradmon/pyradmon.py
+WorkingDirectory=/var/pyradmon
 
 [Install]
 WantedBy=multi-user.target
